@@ -13,7 +13,7 @@
     size_t size;                                                               \
     T buf[];                                                                   \
   } __vec_##T##_hdr;                                                           \
-  T *vec_##T##_with_cap(xalloc *allocator, size_t cap) {                       \
+  T *vec_##T##_with_capacity(xalloc *allocator, size_t cap) {                  \
     __vec_##T##_hdr *res =                                                     \
         allocator(NULL, NULL, 0, sizeof(__vec_##T##_hdr) + sizeof(T) * cap);   \
     res->allocator = allocator;                                                \
@@ -22,7 +22,7 @@
     return (T *)((uint8_t *)res + sizeof(__vec_##T##_hdr));                    \
   }                                                                            \
   T *vec_##T##_new(xalloc *allocator) {                                        \
-    return vec_##T##_with_cap(allocator, 0);                                   \
+    return vec_##T##_with_capacity(allocator, 0);                              \
   }                                                                            \
   __vec_##T##_hdr *__vec_##T##_get_hdr(const T *v) {                           \
     return (__vec_##T##_hdr *)((uint8_t *)v - sizeof(__vec_##T##_hdr));        \

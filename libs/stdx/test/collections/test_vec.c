@@ -14,7 +14,7 @@ void setUp(void) {}
 
 void tearDown(void) {}
 
-void test_vec_new(void) {
+void it_creates_new_vec(void) {
   // arrange
   vec_int sut;
 
@@ -30,7 +30,7 @@ void test_vec_new(void) {
   vec_int_free(sut);
 }
 
-void test_vec_push(void) {
+void it_pushes_item_to_vec(void) {
   // arrange
   vec_int sut = vec_int_new(test_alloc);
   int elem = 42;
@@ -47,7 +47,7 @@ void test_vec_push(void) {
   vec_int_free(sut);
 }
 
-void test_vec_pop(void) {
+void it_pops_item_from_vec(void) {
   // arrange
   vec_int sut = vec_int_new(test_alloc);
   int elem0 = 42, elem1 = 123, elem2 = -100500;
@@ -69,7 +69,7 @@ void test_vec_pop(void) {
   vec_int_free(sut);
 }
 
-void test_vec_push_grow(void) {
+void it_pushes_items_to_vec_until_it_grows(void) {
   // arrange
   vec_int sut = vec_int_new(test_alloc);
 
