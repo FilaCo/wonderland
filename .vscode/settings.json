@@ -6,4 +6,5 @@
         "editor.defaultFormatter": "xaver.clang-format"
     },
     "mesonbuild.buildFolder": "build",
+    "cmake.ignoreCMakeListsMissing": true,
 }
