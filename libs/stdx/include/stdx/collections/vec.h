@@ -5,6 +5,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
+/**
+ * @brief Macro that defines a dynamic array (a.k.a vec_T) of type T.
+ */
 #define DEFINE_VEC(T)                                                          \
   typedef T *vec_##T;                                                          \
   typedef struct {                                                             \
