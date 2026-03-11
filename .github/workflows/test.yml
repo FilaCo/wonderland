@@ -22,7 +22,7 @@ jobs:
       - name: Configure Project
         run: meson setup build/
       - name: Run
-        run: meson test -C build/ -v
+        run: meson test -C build/ -v --no-suite google-benchmark
       - name: Upload Test Log
         uses: actions/upload-artifact@v4
         if: failure()

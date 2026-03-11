@@ -1,2 +1,0 @@
-subdir('stdx')
-subdir('wecs')
