@@ -1,0 +1,8 @@
+#ifndef STDX_ALLOCATORS_LINEAR_ALLOC_H
+#define STDX_ALLOCATORS_LINEAR_ALLOC_H
+
+#include <stddef.h>
+
+
+
+#endif // STDX_ALLOCATORS_LINEAR_ALLOC_H

@@ -3,6 +3,7 @@
 #include "unity.h"
 #include <stdlib.h>
 
+DECLARE_VEC(int)
 DEFINE_VEC(int)
 
 void *test_alloc([[maybe_unused]] void *ctx, void *ptr,
@@ -27,8 +28,9 @@ void test_vec_new(void) {
 
   // assert
   TEST_ASSERT_NOT_NULL(sut);
+  TEST_ASSERT_TRUE(vec_int_empty(sut));
   TEST_ASSERT_EQUAL(0, vec_int_size(sut));
-  TEST_ASSERT_EQUAL(0, vec_int_cap(sut));
+  TEST_ASSERT_EQUAL(0, vec_int_capacity(sut));
 
   // cleanup
   vec_int_free(sut);
@@ -44,7 +46,7 @@ void test_vec_push(void) {
 
   // assert
   TEST_ASSERT_EQUAL(1, vec_int_size(sut));
-  TEST_ASSERT_EQUAL(1, vec_int_cap(sut));
+  TEST_ASSERT_EQUAL(1, vec_int_capacity(sut));
   TEST_ASSERT_EQUAL(elem, sut[0]);
 
   // cleanup
@@ -60,14 +62,13 @@ void test_vec_pop(void) {
   sut = vec_int_push(sut, elem2);
 
   // act
-  int *actual = vec_int_pop(sut);
+  vec_int_pop(sut);
 
   // assert
   TEST_ASSERT_EQUAL(2, vec_int_size(sut));
-  TEST_ASSERT_EQUAL(4, vec_int_cap(sut));
+  TEST_ASSERT_EQUAL(4, vec_int_capacity(sut));
   TEST_ASSERT_EQUAL(elem0, sut[0]);
   TEST_ASSERT_EQUAL(elem1, sut[1]);
-  TEST_ASSERT_EQUAL(elem2, *actual);
 
   // cleanup
   vec_int_free(sut);
@@ -84,7 +85,7 @@ void test_vec_push_until_grows(void) {
 
   // assert
   TEST_ASSERT_EQUAL(10, vec_int_size(sut));
-  TEST_ASSERT_EQUAL(16, vec_int_cap(sut));
+  TEST_ASSERT_EQUAL(16, vec_int_capacity(sut));
   for (int i = 0; i < 10; ++i) {
     TEST_ASSERT_EQUAL(i, sut[i]);
   }

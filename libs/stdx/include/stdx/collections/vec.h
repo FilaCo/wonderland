@@ -1,60 +1,103 @@
+/**
+ * @file vec.h
+ * @brief Dynamic array (vec) collection.
+ */
 #ifndef STDX_COLLECTIONS_VEC_H
 #define STDX_COLLECTIONS_VEC_H
 
 #include "stdx/alloc/xalloc.h"
 #include <stddef.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 /**
- * @brief Macro that defines a dynamic array (a.k.a vec_T) of type T.
+ * @brief Declares a dynamic array (a.k.a vec) of type T.
+ */
+#define DECLARE_VEC(T)                                                         \
+  typedef T *vec_##T;                                                          \
+  T *vec_##T##_with_capacity(xalloc *allocator, size_t capacity);              \
+  T *vec_##T##_new(xalloc *allocator);                                         \
+  void vec_##T##_free(T *v);                                                   \
+  T *vec_##T##_reserve(T *v, size_t capacity);                                 \
+  size_t vec_##T##_capacity(const T *v);                                       \
+  size_t vec_##T##_size(const T *v);                                           \
+  bool vec_##T##_empty(const T *v);                                            \
+  T *vec_##T##_back(const T *v);                                               \
+  T *vec_##T##_push(T *v, const T item);                                       \
+  void vec_##T##_pop(T *v);
+
+/**
+ * @brief Defines a dynamic array (a.k.a vec) of type T.
  */
 #define DEFINE_VEC(T)                                                          \
-  typedef T *vec_##T;                                                          \
   typedef struct {                                                             \
     xalloc *allocator;                                                         \
-    size_t cap;                                                                \
+    size_t capacity;                                                           \
     size_t size;                                                               \
-    T buf[];                                                                   \
-  } __vec_##T##_hdr;                                                           \
-  T *vec_##T##_with_capacity(xalloc *allocator, size_t cap) {                  \
-    __vec_##T##_hdr *res =                                                     \
-        allocator(NULL, NULL, 0, sizeof(__vec_##T##_hdr) + sizeof(T) * cap);   \
+    T data[];                                                                   \
+  } vec_##T##_hdr_;                                                            \
+  T *vec_##T##_with_capacity(xalloc *allocator, size_t capacity) {             \
+    vec_##T##_hdr_ *res = allocator(                                           \
+        NULL, NULL, 0, sizeof(vec_##T##_hdr_) + sizeof(T) * capacity);         \
     res->allocator = allocator;                                                \
-    res->cap = cap;                                                            \
+    res->capacity = capacity;                                                  \
     res->size = 0;                                                             \
-    return (T *)((uint8_t *)res + sizeof(__vec_##T##_hdr));                    \
+    return (T *)((uint8_t *)res + offsetof(vec_##T##_hdr_, data));              \
   }                                                                            \
   T *vec_##T##_new(xalloc *allocator) {                                        \
     return vec_##T##_with_capacity(allocator, 0);                              \
   }                                                                            \
-  __vec_##T##_hdr *__vec_##T##_get_hdr(const T *v) {                           \
-    return (__vec_##T##_hdr *)((uint8_t *)v - sizeof(__vec_##T##_hdr));        \
+  static inline vec_##T##_hdr_ *vec_##T##_get_hdr_(const T *v) {               \
+    return (vec_##T##_hdr_ *)((uint8_t *)v - offsetof(vec_##T##_hdr_, data));   \
   }                                                                            \
-  size_t __vec_##T##_get_bytes_size(const __vec_##T##_hdr *h) {                \
-    return sizeof(__vec_##T##_hdr) + sizeof(T) * h->cap;                       \
+  static inline vec_##T##_hdr_ *vec_##T##_grow_(vec_##T##_hdr_ *h,             \
+                                                size_t capacity) {             \
+    size_t hdr_size = sizeof(vec_##T##_hdr_);                                  \
+    size_t elem_size = sizeof(T);                                              \
+    size_t osize = hdr_size + elem_size * h->capacity;                         \
+    size_t nsize = hdr_size + elem_size * capacity;                            \
+    h = h->allocator(NULL, h, osize, nsize);                                   \
+    h->capacity = capacity;                                                    \
+    return h;                                                                  \
+  }                                                                            \
+  T *vec_##T##_reserve(T *v, size_t capacity) {                                \
+    vec_##T##_hdr_ *h = vec_##T##_get_hdr_(v);                                 \
+    size_t old_capacity = h->capacity;                                         \
+    if (old_capacity >= capacity) {                                            \
+      return v;                                                                \
+    }                                                                          \
+    h = vec_##T##_grow_(h, capacity);                                          \
+    return (T *)((uint8_t *)h + offsetof(vec_##T##_hdr_, data));                \
   }                                                                            \
   void vec_##T##_free(T *v) {                                                  \
-    __vec_##T##_hdr *h = __vec_##T##_get_hdr(v);                               \
-    h->allocator(NULL, h, __vec_##T##_get_bytes_size(h), 0);                   \
+    vec_##T##_hdr_ *h = vec_##T##_get_hdr_(v);                                 \
+    size_t hdr_size = sizeof(vec_##T##_hdr_);                                  \
+    size_t bytes_size = hdr_size + sizeof(T) * h->capacity;                    \
+    h->allocator(NULL, h, bytes_size, 0);                                      \
   }                                                                            \
-  size_t vec_##T##_cap(const T *v) { return __vec_##T##_get_hdr(v)->cap; }     \
-  size_t vec_##T##_size(const T *v) { return __vec_##T##_get_hdr(v)->size; }   \
+  size_t vec_##T##_capacity(const T *v) {                                      \
+    return vec_##T##_get_hdr_(v)->capacity;                                    \
+  }                                                                            \
+  size_t vec_##T##_size(const T *v) { return vec_##T##_get_hdr_(v)->size; }    \
+  bool vec_##T##_empty(const T *v) { return vec_##T##_size(v) == 0; }          \
+  T *vec_##T##_back(const T *v) {                                              \
+    vec_##T##_hdr_ *h = vec_##T##_get_hdr_(v);                                 \
+    return &h->data[h->size - 1];                                               \
+  }                                                                            \
   T *vec_##T##_push(T *v, const T item) {                                      \
-    __vec_##T##_hdr *h = __vec_##T##_get_hdr(v);                               \
-    if (h->size == h->cap) {                                                   \
-      size_t osize = __vec_##T##_get_bytes_size(h);                            \
-      h->cap = h->cap ? h->cap << 1 : 1;                                       \
-      h = h->allocator(NULL, h, osize, __vec_##T##_get_bytes_size(h));         \
+    vec_##T##_hdr_ *h = vec_##T##_get_hdr_(v);                                 \
+    if (h->size == h->capacity) {                                              \
+      h = vec_##T##_grow_(h, h->capacity ? h->capacity << 1 : 1);              \
     }                                                                          \
-    h->buf[h->size++] = item;                                                  \
-    return h->buf;                                                             \
+    h->data[h->size++] = item;                                                  \
+    return h->data;                                                             \
   }                                                                            \
-  T *vec_##T##_pop(T *v) {                                                     \
-    __vec_##T##_hdr *h = __vec_##T##_get_hdr(v);                               \
+  void vec_##T##_pop(T *v) {                                                   \
+    vec_##T##_hdr_ *h = vec_##T##_get_hdr_(v);                                 \
     if (h->size == 0) {                                                        \
-      return NULL;                                                             \
+      return;                                                                  \
     }                                                                          \
-    return &h->buf[--h->size];                                                 \
+    --h->size;                                                                 \
   }
 
 #endif // STDX_COLLECTIONS_VEC_H

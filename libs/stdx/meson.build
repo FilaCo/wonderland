@@ -8,3 +8,7 @@ stdx_static = static_library('stdx', stdx_src, include_directories: stdx_inc)
 if get_option('enable-tests')
     subdir('tests')
 endif
+
+if get_option('enable-benchmarks')
+    # subdir('benchmarks')
+endif

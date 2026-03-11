@@ -13,7 +13,7 @@ unity_gen_runner = unity.get_variable('gen_test_runner')
 
 subdir('libs')
 
-regex = '^((?!(subprojects|tests)).)*$'
+regex = '^((?!(benchmarks|subprojects|tests)).)*$'
 run_target(
     'tidy',
     command: [
