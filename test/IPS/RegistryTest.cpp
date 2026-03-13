@@ -1,8 +1,7 @@
-#include "Wonderland/ECS/Registry.h"
-#include "Wonderland/ECS/Entity.h"
+#include "Wonderland/IPS/Registry.h"
 #include <gtest/gtest.h>
 
-using namespace Wonderland::ECS;
+using namespace Wonderland::IPS;
 
 TEST(RegistryTest, ItSpawnsEntity) {
   // arrange
@@ -49,9 +48,7 @@ TEST(RegistryTest, ItRecyclesEntities) {
     EXPECT_EQ(i & 1, SUT.isAlive(i));
   }
 
-  Entity Expected;
   for (uint32_t i = 0; i < 10; i += 2) {
-    Expected = (8 - i) | (1 << 20);
-    EXPECT_EQ(Expected, SUT.spawn());
+    EXPECT_EQ((8 - i) | (1 << 20), SUT.spawn());
   }
 }

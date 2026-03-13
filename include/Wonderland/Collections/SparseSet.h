@@ -1,3 +1,6 @@
+/**
+ * @file Declares SparseSet<T>
+ */
 #ifndef WONDERLAND_COLLECTIONS_SPARSESET_H
 #define WONDERLAND_COLLECTIONS_SPARSESET_H
 
@@ -6,6 +9,9 @@
 
 namespace Wonderland::Collections {
 template <typename ItemT> class SparseSet {
+public:
+  void Clear();
+
 private:
   std::pmr::vector<uint32_t> Sparse;
   std::pmr::vector<uint32_t> Dense;

@@ -13,7 +13,13 @@ wondlerland_src = []
 subdir('src')
 
 wonderland_static = static_library(meson.project_name(), wondlerland_src, include_directories: wonderland_inc)
-wonderland_exec = executable(meson.project_name(), files('src/main.cpp'), include_directories: wonderland_inc, link_with: wonderland_static)
+
+wonderland_exec = executable(
+    meson.project_name(),
+    files('src/main.cpp'),
+    include_directories: wonderland_inc,
+    link_with: wonderland_static,
+)
 
 if get_option('enable-tests')
     subdir('test')
@@ -23,7 +29,9 @@ if get_option('enable-benchmarks')
     subdir('benchmark')
 endif
 
-regex = '^((?!(benchmarks|subprojects|tests)).)*$'
+subdir('docs')
+
+regex = '^((?!(benchmarks|docs|subprojects|tests)).)*$'
 run_target(
     'lint',
     command: [
