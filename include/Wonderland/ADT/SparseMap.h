@@ -6,24 +6,30 @@
 
 #include <concepts>
 #include <cstddef>
+#include <memory>
 #include <vector>
 
 namespace Wonderland::ADT {
 /**
- * @brief SparseMap<K, V> implementation.
+ * @brief A SparseMap<K, V> implementation.
  *
  * @tparam K -
  * @tparam V
  */
-template <std::convertible_to<std::size_t> K, typename V> class SparseMap {
+template <std::convertible_to<std::size_t> KeyT, typename ValueT,
+          typename KeyAllocatorT = std::allocator<KeyT>,
+          typename ValueAllocatorT = std::allocator<ValueT>>
+class SparseMap final {
 public:
+  explicit constexpr SparseMap(KeyAllocatorT &KeyAllocator,
+                               ValueAllocatorT &ValueAllocator) noexcept;
   void clear() noexcept;
 
 private:
   size_t Size;
-  std::pmr::vector<K> Sparse;
-  std::pmr::vector<K> Dense;
-  std::pmr::vector<V> DenseValues;
+  std::vector<KeyT, KeyAllocatorT> Sparse;
+  std::vector<KeyT, KeyAllocatorT> Dense;
+  std::vector<ValueT, ValueAllocatorT> DenseValues;
 };
 } // namespace Wonderland::ADT
 

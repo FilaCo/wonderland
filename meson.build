@@ -31,7 +31,7 @@ endif
 
 subdir('docs')
 
-regex = '^((?!(benchmarks|docs|subprojects|tests)).)*$'
+regex = '^((?!(benchmark|docs|subprojects|test)).)*$'
 run_target(
     'lint',
     command: [

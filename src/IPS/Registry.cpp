@@ -2,14 +2,18 @@
 #include "Wonderland/IPS/Id.h"
 
 namespace Wonderland::IPS {
-Id Registry::spawn() {
+template <typename AllocatorT>
+constexpr Registry<AllocatorT>::Registry() noexcept
+    : Available(0), NextPosition(0), Ids({}) {}
+
+template <typename AllocatorT> Id Registry<AllocatorT>::spawn() {
   if (Available > 0) {
     return recycle();
   }
   return spawnImpl();
 }
 
-Id Registry::recycle() {
+template <typename AllocatorT> Id Registry<AllocatorT>::recycle() noexcept {
   // holder stores recycled id version
   auto PositionToRecycle = NextPosition;
   auto Holder = Ids[PositionToRecycle];
@@ -22,7 +26,7 @@ Id Registry::recycle() {
 
   return Recycled;
 }
-Id Registry::spawnImpl() {
+template <typename AllocatorT> Id Registry<AllocatorT>::spawnImpl() noexcept {
   auto Spawned = Id(NextPosition);
   Ids.push_back(Spawned);
 
@@ -32,7 +36,8 @@ Id Registry::spawnImpl() {
   return Spawned;
 }
 
-void Registry::despawn(Id IdToDespawn) noexcept {
+template <typename AllocatorT>
+void Registry<AllocatorT>::despawn(Id IdToDespawn) noexcept {
   // holder stores previous NextPosition and actual version of the Id
   auto PositionToDespawn = IdToDespawn.Position;
   auto Holder = Id(NextPosition, IdToDespawn.Version + 1);
@@ -43,11 +48,15 @@ void Registry::despawn(Id IdToDespawn) noexcept {
   ++Available;
 }
 
-bool Registry::isAlive(Id Id) const {
+template <typename AllocatorT>
+bool Registry<AllocatorT>::isAlive(Id Id) const noexcept {
   auto TargetPosition = Id.Position;
   return TargetPosition < Ids.size() &&
          Id.Version == Ids[TargetPosition].Version;
 }
-bool Registry::isDead(Id Id) const { return !isAlive(Id); }
+template <typename AllocatorT>
+bool Registry<AllocatorT>::isDead(Id Id) const noexcept {
+  return !isAlive(Id);
+}
 
 } // namespace Wonderland::IPS

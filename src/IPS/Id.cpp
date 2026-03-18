@@ -2,20 +2,20 @@
 #include <cstddef>
 
 namespace Wonderland::IPS {
-static const uint8_t IdPositionBits = 20;
-static const uint32_t IdPositionMask = (1 << 20) - 1;
 
-Id::Id(size_t RawId) noexcept
-    : Position(RawId & IdPositionMask), Version(RawId >> IdPositionBits) {}
+constexpr Id::Id(size_t RawId) noexcept
+    : Position(RawId & PositionMask), Version(RawId >> PositionBits) {}
 
-Id::operator size_t() const { return Position | (Version << IdPositionBits); }
+constexpr Id::operator size_t() const {
+  return Position | (Version << PositionBits);
+}
 
 bool Id::operator==(Id Other) const {
   return Position == Other.Position && Version == Other.Version;
 }
 bool Id::operator!=(Id Other) const { return !(*this == Other); }
 
-Id::Id(uint32_t Position, uint32_t Version) noexcept
+constexpr Id::Id(uint32_t Position, uint32_t Version) noexcept
     : Position(Position), Version(Version) {}
 
 } // namespace Wonderland::IPS

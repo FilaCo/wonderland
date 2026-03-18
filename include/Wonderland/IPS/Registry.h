@@ -2,23 +2,25 @@
 #define WONDERLAND_IPS_REGISTRY_H
 
 #include "Wonderland/IPS/Id.h"
+#include <memory>
 #include <vector>
 
 namespace Wonderland::IPS {
-class Registry {
+template <typename AllocatorT = std::allocator<Id>> class Registry final {
 public:
+  explicit constexpr Registry() noexcept;
   Id spawn();
   void despawn(Id IdToDespawn) noexcept;
-  bool isAlive(Id Id) const;
-  bool isDead(Id Id) const;
+  bool isAlive(Id Id) const noexcept;
+  bool isDead(Id Id) const noexcept;
 
 private:
-  Id recycle();
-  Id spawnImpl();
+  inline Id recycle() noexcept;
+  inline Id spawnImpl() noexcept;
 
   size_t Available;
   size_t NextPosition;
-  std::pmr::vector<Id> Ids;
+  std::vector<Id, AllocatorT> Ids;
 };
 } // namespace Wonderland::IPS
 

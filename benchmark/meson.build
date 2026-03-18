@@ -1,1 +1,1 @@
-# benchmark = subproject('google-benchmark')
+benchmark = subproject('google-benchmark')
