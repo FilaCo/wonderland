@@ -55,6 +55,10 @@ private:
    * mask to extract the `Position` value.
    */
   static constexpr uint32_t PositionMask = (1u << PositionBits) - 1;
+  /**
+   * Reserved version after which we cannot recycle an `Id`.
+   */
+  static constexpr uint32_t RetiredVersion = (1u << VersionBits) - 1;
 
   uint32_t Position : PositionBits;
   uint32_t Version : VersionBits;

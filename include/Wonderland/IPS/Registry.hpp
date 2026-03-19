@@ -10,17 +10,20 @@ namespace Wonderland::IPS {
 template <typename AllocatorT = std::allocator<Id>> class Registry final {
 public:
   Registry() noexcept : Available(0), NextPosition(0) {}
-  Id spawn() {
-    if (Available > 0) {
-      return recycle();
-    }
-    return spawnImpl();
-  }
+  Id spawn() { return Available > 0 ? recycle() : spawnImpl(); }
   void despawn(Id IdToDespawn) noexcept {
-    // holder stores previous NextPosition and actual version of the Id
     auto PositionToDespawn = IdToDespawn.Position;
-    auto Holder = Id(NextPosition, IdToDespawn.Version + 1);
-    Ids[PositionToDespawn] = Holder;
+    if (isDead(IdToDespawn)) {
+      return;
+    }
+    uint32_t NextVersion = IdToDespawn.Version + 1;
+    if (NextVersion >= Id::RetiredVersion) {
+      // Version would wrap — retire the slot permanently, do not recycle
+      Ids[PositionToDespawn] = Id(PositionToDespawn, Id::RetiredVersion);
+      return;
+    }
+    // Store previous NextPosition and actual version of the Id
+    Ids[PositionToDespawn] = Id(NextPosition, NextVersion);
 
     NextPosition = PositionToDespawn;
     ++Available;
