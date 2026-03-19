@@ -1,19 +1,19 @@
-#include "Wonderland/IPS/Registry.hpp"
+#include "Wonderland/ECS/Registry.hpp"
 #include <gtest/gtest.h>
 
-using namespace Wonderland::IPS;
+using namespace Wonderland::ECS;
 
 TEST(RegistryTest, ItSpawnsEntity) {
   // arrange
   auto SUT = Registry();
-  auto Expected = Id(0);
+  auto Expected = 0;
 
   // act
   auto Actual = SUT.spawn();
 
   // assert
   EXPECT_EQ(Expected, Actual);
-  ASSERT_TRUE(SUT.isAlive(Actual));
+  EXPECT_TRUE(SUT.isAlive(Actual));
 }
 
 TEST(RegistryTest, ItDespawnsEntity) {
@@ -27,7 +27,7 @@ TEST(RegistryTest, ItDespawnsEntity) {
 
   // assert
   EXPECT_TRUE(SUT.isAlive(AliveEntity));
-  ASSERT_TRUE(SUT.isDead(DeadEntity));
+  EXPECT_TRUE(SUT.isDead(DeadEntity));
 }
 
 TEST(RegistryTest, ItRecyclesEntities) {
@@ -40,17 +40,17 @@ TEST(RegistryTest, ItRecyclesEntities) {
   }
 
   for (auto i = 0; i < 10; i += 2) {
-    SUT.despawn(Id(i));
+    SUT.despawn(i);
   }
 
   // assert
   for (auto i = 0; i < 10; ++i) {
-    EXPECT_EQ(i & 1, SUT.isAlive(Id(i)));
+    EXPECT_EQ(i & 1, SUT.isAlive(i));
   }
 
   for (auto i = 0; i < 10; i += 2) {
 
-    EXPECT_EQ(Id((8 - i) | (1 << 20)), SUT.spawn());
+    EXPECT_EQ((8 - i) | (1 << 20), SUT.spawn());
   }
 }
 
@@ -61,8 +61,8 @@ TEST(RegistryTest, ItDoesNotDespawnDeadEntities) {
   SUT.despawn(Target);
 
   // Only one increment of the version
-  auto ExpectedRecycled = Id(1 << 20);
-  auto ExpectedSpawned = Id(1);
+  auto ExpectedRecycled = 1 << 20;
+  auto ExpectedSpawned = 1;
 
   // act
   SUT.despawn(Target);
@@ -91,10 +91,10 @@ TEST(RegistryTest, StaleIsDeadAfterRecycle) {
 TEST(RegistryTest, RecyclingCapabilityStressTest) {
   // arrange
   auto SUT = Registry();
-  auto Expected = Id(1);
+  auto Expected = 1;
 
   // act
-  for (auto i = 0; i < 4095; ++i) {
+  for (auto i = 0; i < 4096; ++i) {
     SUT.despawn(SUT.spawn());
   }
   auto Actual = SUT.spawn();
@@ -106,6 +106,9 @@ TEST(RegistryTest, RecyclingCapabilityStressTest) {
 TEST(RegistryTest, IdsOutOfBoundsAreDead) {
   // arrange
   auto SUT = Registry();
-  auto Target = Id(1);
+  auto Target = 1;
+
+  // act
+  // assert
   EXPECT_TRUE(SUT.isDead(Target));
 }

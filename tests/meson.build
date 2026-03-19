@@ -5,7 +5,7 @@ gtest_main_dep = gtest.get_variable('gtest_main_dep')
 test_wonderland_deps = [gtest_dep, gtest_main_dep]
 test_wonderland_cases = []
 
-subdir('IPS')
+subdir('ECS')
 
 foreach case : test_wonderland_cases
     test(
