@@ -1,0 +1,23 @@
+var NAVTREEINDEX0 =
+{
+"Id_8hpp_source.html":[1,0,0,0,1,0],
+"Registry_8hpp_source.html":[1,0,0,0,1,1],
+"SparseMap_8hpp_source.html":[1,0,0,0,0,0],
+"annotated.html":[0,0],
+"classWonderland_1_1ADT_1_1SparseMap.html":[0,0,0,0,0],
+"classWonderland_1_1IPS_1_1Id.html":[0,0,0,1,0],
+"classWonderland_1_1IPS_1_1Id.html#a09846f89da92ac0bae559b7a961f981d":[0,0,0,1,0,1],
+"classWonderland_1_1IPS_1_1Id.html#a6331ffde74ca667f1462a5868c905b08":[0,0,0,1,0,0],
+"classWonderland_1_1IPS_1_1Registry.html":[0,0,0,1,1],
+"classWonderland_1_1IPS_1_1Registry.html#a7166ced290b52038d9de5ee6c31d889d":[0,0,0,1,1,0],
+"classes.html":[0,1],
+"dir_24a8a052fa8da8b1eccef4b31ea6de5e.html":[1,0,0,0],
+"dir_3240b58c6ce140df4a794282fbf59356.html":[1,0,0,0,1],
+"dir_839a8245644c7b2c491f12023226e55b.html":[1,0,0,0,0],
+"dir_d44c64559bbebec7f509842c48db8b23.html":[1,0,0],
+"files.html":[1,0],
+"functions.html":[0,2,0],
+"functions_func.html":[0,2,1],
+"index.html":[],
+"pages.html":[]
+};
