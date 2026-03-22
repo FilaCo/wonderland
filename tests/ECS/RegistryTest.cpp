@@ -4,7 +4,7 @@
 
 using namespace Wonderland::ECS;
 
-TEST(RegistryTest, ItSpawnsEntity) {
+TEST(RegistryTest, ItSpawnsId) {
   // arrange
   auto SUT = Registry();
   auto Expected = 0;
@@ -17,18 +17,18 @@ TEST(RegistryTest, ItSpawnsEntity) {
   EXPECT_TRUE(SUT.isAlive(Actual));
 }
 
-TEST(RegistryTest, ItDespawnsEntity) {
+TEST(RegistryTest, ItDespawnsId) {
   // arrange
   auto SUT = Registry();
-  auto AliveEntity = SUT.spawn();
-  auto DeadEntity = SUT.spawn();
+  auto Alive = SUT.spawn();
+  auto Dead = SUT.spawn();
 
   // act
-  SUT.despawn(DeadEntity);
+  SUT.despawn(Dead);
 
   // assert
-  EXPECT_TRUE(SUT.isAlive(AliveEntity));
-  EXPECT_TRUE(SUT.isDead(DeadEntity));
+  EXPECT_TRUE(SUT.isAlive(Alive));
+  EXPECT_TRUE(SUT.isDead(Dead));
 }
 
 TEST(RegistryTest, ItRecyclesEntities) {
@@ -55,7 +55,7 @@ TEST(RegistryTest, ItRecyclesEntities) {
   }
 }
 
-TEST(RegistryTest, ItDoesNotDespawnDeadEntities) {
+TEST(RegistryTest, ItDoesNotDespawnDeadIds) {
   // arrange
   auto SUT = Registry();
   auto Target = SUT.spawn();
@@ -101,6 +101,7 @@ TEST(RegistryTest, RecyclingCapabilityStressTest) {
   auto Actual = SUT.spawn();
 
   // assert
+  EXPECT_TRUE(SUT.isDead(0)); // position 0 retired
   EXPECT_EQ(Expected, Actual);
 }
 

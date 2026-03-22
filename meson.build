@@ -1,7 +1,7 @@
 project(
     'Wonderland',
     'cpp',
-    default_options: ['warning_level=3', 'cpp_std=c++23'],
+    default_options: ['warning_level=3', 'cpp_std=c++26'],
     meson_version: '>= 1.3.0',
     version: '0.1.0',
     license: 'MIT',
@@ -10,9 +10,11 @@ project(
 sdl3 = subproject('sdl3')
 sdl3_dep = sdl3.get_variable('sdl3_dep')
 
+threads_dep = dependency('threads')
+
 wonderland_inc = [include_directories('include')]
 wonderland_src = []
-wonderland_deps = [sdl3_dep]
+wonderland_deps = [sdl3_dep, threads_dep]
 
 subdir('src')
 
@@ -23,7 +25,7 @@ wonderland_static = static_library(
     dependencies: wonderland_deps,
 )
 
-wonderland_exec = executable(
+wonderland_editor = executable(
     meson.project_name(),
     files('src/main.cpp'),
     include_directories: wonderland_inc,

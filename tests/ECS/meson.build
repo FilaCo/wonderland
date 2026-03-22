@@ -4,7 +4,7 @@ test_wonderland_cases += [
         'sources': files('RegistryTest.cpp'),
     },
     {
-        'name': 'SparseSetTest',
-        'sources': files('SparseSetTest.cpp'),
+        'name': 'PropPoolTest',
+        'sources': files('PropPoolTest.cpp'),
     },
 ]
