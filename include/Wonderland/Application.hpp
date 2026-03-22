@@ -3,35 +3,43 @@
 
 #include <expected>
 
-class ApplicationBuilder;
-
 namespace Wonderland {
+
+class ApplicationBuilder;
 
 class Application final {
 public:
-  static ApplicationBuilder builder();
-  int run();
+  static ApplicationBuilder builder() noexcept;
+
+  ~Application() = default;
+  Application(const Application &) = delete;
+  Application &operator=(const Application &) = delete;
+  Application(Application &&) = default;
+  Application &operator=(Application &&) = default;
+
+  int run() noexcept;
 
 private:
   friend class ApplicationBuilder;
-  Application();
+  Application() = default;
 };
 
-struct ApplicationBuilderError;
+enum class ApplicationBuilderError : unsigned char {};
 
 class ApplicationBuilder final {
 public:
-  ApplicationBuilder();
+  ApplicationBuilder() = default;
 
-  ApplicationBuilder *addSystem();
+  constexpr int run() noexcept {
+    auto App =
+        build().transform(&Application::run).transform_error([](auto &&Error) {
+          return static_cast<int>(Error);
+        });
 
-  std::expected<Application, ApplicationBuilderError> build();
-};
+    return App.has_value() ? App.value() : App.error();
+  }
 
-enum class ApplicationBuilderErrorKind : unsigned char {};
-
-struct ApplicationBuilderError {
-  ApplicationBuilderErrorKind Kind;
+  std::expected<Application, ApplicationBuilderError> build() noexcept;
 };
 
 } // namespace Wonderland

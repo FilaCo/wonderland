@@ -1,0 +1,1 @@
+wonderland_src += files('Application.cpp')

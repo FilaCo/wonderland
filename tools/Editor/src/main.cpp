@@ -1,1 +1,5 @@
-int main(int argc, char *argv[]) { return 0; }
+#include "Wonderland/Application.hpp"
+
+using namespace Wonderland;
+
+int main() { return Application::builder().run(); }
