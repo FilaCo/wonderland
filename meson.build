@@ -1,7 +1,7 @@
 project(
     'Wonderland',
     'cpp',
-    default_options: ['warning_level=3', 'cpp_std=c++26'],
+    default_options: ['warning_level=3', 'cpp_std=c++23'],
     meson_version: '>= 1.3.0',
     version: '0.1.0',
     license: 'MIT',
@@ -25,12 +25,7 @@ wonderland_static = static_library(
     dependencies: wonderland_deps,
 )
 
-wonderland_editor = executable(
-    meson.project_name(),
-    files('src/main.cpp'),
-    include_directories: wonderland_inc,
-    link_with: wonderland_static,
-)
+subdir('tools')
 
 if get_option('enable-tests')
     subdir('tests')

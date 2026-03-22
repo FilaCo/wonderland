@@ -3,7 +3,7 @@
 ## Phase 1 — Engine Core
 
 - [ ] SDL3 window + event loop
-- [ ] ECS component storage (`SparseSet` becomes `ComponentPool<T>`)
+- [x] ECS component storage (`SparseSet` becomes `ComponentPool<T>`)
 - [ ] Event bus (deferred queues + immediate signals)
 - [ ] Input system (platform events → named actions via events)
 
