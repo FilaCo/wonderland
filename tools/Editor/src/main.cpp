@@ -2,4 +2,4 @@
 
 using namespace Wonderland;
 
-int main() { return Application::builder().run(); }
+int main() { return Application::builder().buildAndRun(); }

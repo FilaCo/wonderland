@@ -30,7 +30,7 @@ class ApplicationBuilder final {
 public:
   ApplicationBuilder() = default;
 
-  constexpr int run() noexcept {
+  constexpr int buildAndRun() noexcept {
     auto App =
         build().transform(&Application::run).transform_error([](auto &&Error) {
           return static_cast<int>(Error);
