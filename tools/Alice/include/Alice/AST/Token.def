@@ -1,6 +1,0 @@
-#ifndef TOKEN
-#define TOKEN(ID)
-
-TOKEN(EndOfFile)
-
-#endif
