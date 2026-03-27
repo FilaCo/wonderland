@@ -1,2 +1,0 @@
-option('enable-tests', type: 'boolean', description: 'Enable unit tests.')
-option('enable-benchmarks', type: 'boolean', description: 'Enable benchmarks.')

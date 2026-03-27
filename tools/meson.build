@@ -1,2 +1,0 @@
-subdir('Alice')
-subdir('Editor')

@@ -1,1 +1,0 @@
-wonderland_editor_src += files('main.cpp')

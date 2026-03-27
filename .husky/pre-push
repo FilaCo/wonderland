@@ -1,3 +1,2 @@
-ninja -C build clang-format-check;
-meson compile -C build lint;
-meson test -C build -v --no-suite google-benchmark;
+cargo clippy;
+cargo test --verbose
