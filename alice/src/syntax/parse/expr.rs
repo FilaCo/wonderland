@@ -1,3 +1,5 @@
-use crate::syntax::{ast::ExprKind, parse::parser::Parser};
+use crate::syntax::{ast::Expr, parse::parser::Parser};
 
-impl Parser {}
+impl Parser {
+    pub(crate) fn expr(&mut self, min_bp: u8) /* -> Expr<'a> */ {}
+}

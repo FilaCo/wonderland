@@ -7,17 +7,17 @@ pub struct AliceScript<'src> {
 
 #[derive(Clone, Debug)]
 pub enum TopLevelObject<'src> {
-    TopLevelStmt(TopLevelStmtKind<'src>),
-    TopLevelDecl,
+    Stmt(TopLevelStmt<'src>),
+    Decl,
 }
 
 #[derive(Clone, Debug)]
-pub enum TopLevelStmtKind<'src> {
+pub enum TopLevelStmt<'src> {
     UsingNamespace { namespace_ident: &'src str },
 }
 
 #[derive(Clone, Debug)]
-pub enum ExprKind<'src> {
+pub enum Expr<'src> {
     Binary {
         lhs: Box<Spanned<Self>>,
         op: Spanned<Token<'src>>,

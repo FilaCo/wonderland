@@ -4,7 +4,7 @@ use crate::source::{Span, Spanned};
 pub enum Token<'a> {
     Whitespace,
     /// `LF | (CR [LF])`
-    NewLine,
+    Newline,
     Indent,
     Dedent,
 
