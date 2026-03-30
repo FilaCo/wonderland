@@ -1,6 +1,6 @@
 use crate::compiler::Config;
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct Alice {
     cfg: Config,
 }

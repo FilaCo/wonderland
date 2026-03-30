@@ -30,7 +30,7 @@ pub enum ExprKind<'src> {
     Grouped {
         expr: Box<Spanned<Self>>,
     },
-    LiteralConst {
+    Literal {
         value: Spanned<Token<'src>>,
     },
 }
