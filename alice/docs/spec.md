@@ -272,7 +272,7 @@ field_decl       = Ident ":" ident_path .
 
 tuple_prop_decl = Ident "(" ident_path { "," ident_path } ")" .
 
-sys_decl = "sys" Ident sys_body .
+sys_decl = "sys" sys_body .
 sys_body = "{" { stage [semis] } "}" .
 
 stage = select_stage
@@ -283,11 +283,21 @@ stage = select_stage
       | spawn_stage
       | despawn_stage .
 
-select_stage    = "select" ( "{" select_bindings "}" | select_bindings ) .
+select_stage    = "select" select_bindings .
 select_bindings = select_binding { "," select_binding } .
 select_binding  = [ Ident ":" ] ["mut"] ["?"] ident_path .
 
 filter_stage = "filter" expr .
+
+derive_stage = "derive" .
+
+insert_stage = "insert" .
+
+erase_stage = "erase" .
+
+spawn_stage = "spawn" .
+
+despawn_stage = "despawn" .
 
 const_decl = "const" Ident "=" expr .
 
