@@ -68,7 +68,7 @@ CarriageReturn = '\r' .
 NewLine        = LineFeed | (CarriageReturn [LineFeed]) .
 BlockComment   = "/*" { BlockComment | <any character> } "*/" .
 LineComment    = "//" { <any character except CarriageReturn and LineFeed> } .
-Whitespace     = ' ' | '\t' | '\f' .
+Whitespace     = ( " " | "\t" | "\f" ) { ( " " | "\t" | "\f" ) } .
 ```
 
 #### 1.2.2 Keywords and operators
@@ -168,9 +168,9 @@ BoolLit = "true" | "false" .
 #### 1.2.4 Identifiers
 
 ```ebnf
-UnicodeLetter = /* Any unicode character of categories Lu, Ll, Lt, Lm or Lo */ .
-UnicodeDigit = /* Any unicode character of category Nd */ .
-Ident = (UnicodeLetter | "_") { UnicodeLetter | "_" | UnicodeDigit } .
+UnicodeLetter = /* <any unicode character of categories Lu, Ll, Lt, Lm or Lo> */ .
+UnicodeDigit = /* <any unicode character of category Nd> */ .
+Ident = ( UnicodeLetter | "_" ) { UnicodeLetter | "_" | UnicodeDigit } .
 ```
 
 #### 1.2.5 String mode grammar

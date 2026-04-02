@@ -1,4 +1,4 @@
-use alice::driver::AliceDriver;
+use ac::driver::AliceDriver;
 
 fn main() {
     AliceDriver::default().run();

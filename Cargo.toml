@@ -1,10 +1,16 @@
 [workspace]
 resolver = "3"
-members = ["alice", "hatter", "engine/*"]
+members = ["alice/*", "hatter", "engine/*"]
 
 [workspace.dependencies]
+ac_db = { path = "alice/ac_db" }
+ac_interface = { path = "alice/ac_interface" }
+ac_ir = { path = "alice/ac_ir" }
+ac_parser = { path = "alice/ac_parser" }
+ac_query = { path = "alice/ac_query" }
 ariadne = { version = "0.6" }
 clap = { version = "4" }
 dashmap = { version = "6" }
+salsa = { version = "0.26" }
 thiserror = { version = "2" }
 wonderland_ecs = { path = "engine/wonderland_ecs" }
