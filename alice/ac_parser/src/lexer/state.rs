@@ -3,11 +3,11 @@ use ac_ir::syntax::Token;
 
 use crate::{dummy_token, lexer::Cursor};
 
-pub struct Lexer<'db> {
-    db: &'db dyn AcDbTrait,
-    cursor: Cursor<'db>,
-    token: Token<'db>,
-    pos: usize,
+pub(crate) struct Lexer<'db> {
+    pub(super) db: &'db dyn AcDbTrait,
+    pub(super) cursor: Cursor<'db>,
+    pub(super) token: Token<'db>,
+    pub(super) pos: usize,
 }
 
 impl<'db> Lexer<'db> {

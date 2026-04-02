@@ -1,5 +1,6 @@
+mod advance_token;
 mod cursor;
 mod state;
 
-pub use cursor::*;
-pub use state::*;
+pub(super) use cursor::*;
+pub(super) use state::*;
