@@ -248,10 +248,10 @@ The grammar below replaces some lexical grammar rules with explicit literals (wh
 ```ebnf
 alice_file = { top_level_stmt [semis] } EndOfInput .
 
-top_level_stmt = using_stmt
+top_level_stmt = using_namespace_stmt
                | decl .
 
-using_stmt = "using" ident_path .
+using_namespace_stmt = "using" "namespace" ident_path .
 
 decl = prop_decl
      | sys_decl

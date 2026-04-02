@@ -4,3 +4,6 @@ version = "0.0.0"
 edition = "2024"
 
 [dependencies]
+ac_db.workspace = true
+ac_ir.workspace = true
+salsa.workspace = true

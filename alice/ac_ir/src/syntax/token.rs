@@ -14,7 +14,7 @@ pub enum TokenKind<'db> {
     /// will not be considered terminated and will result in a parsing error.
     ///
     /// `BlockComment = "/*" { BlockComment | <any character> } "*/" .`
-    BlockComment,
+    BlockComment { terminated: bool },
     /// A line comment, e.g. `// comment`.
     ///
     /// `LineComment = "//" { <any character except CarriageReturn and LineFeed> } .`
@@ -113,9 +113,8 @@ pub enum Base {
     Hex = 16,
 }
 
-#[salsa::tracked(debug)]
+#[salsa::interned(debug)]
 pub struct Symbol<'db> {
-    #[tracked]
     #[returns(ref)]
     pub value: String,
 }
