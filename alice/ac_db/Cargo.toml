@@ -5,3 +5,4 @@ edition = "2024"
 
 [dependencies]
 salsa.workspace = true
+ac_ir.workspace = true

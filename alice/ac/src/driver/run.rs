@@ -1,39 +1,50 @@
 use std::{
     io::{BufRead, BufReader, Write, stdin, stdout},
-    path::Path,
+    path::{Path, PathBuf},
 };
 
-use crate::driver::AliceDriver;
+use ac_db::db::AcDbTrait;
+use ac_diag::Diagnostic;
+use ac_interface::{Config, run_alice};
+use ac_ir::source::SourceFile;
+use ac_query::parse_file_query;
+
+use crate::driver::{AliceDriver, report::report};
 
 impl AliceDriver {
     pub fn run(self) {
-        // run_alice(Config::from(self), |alice| match alice.input() {
-        //     Some(file) => Self::run_file(alice, file),
-        //     None => Self::run_repl(alice),
-        // })
+        run_alice(Config::from(self), |db| match db.input() {
+            Some(file) => Self::run_file(db, file),
+            None => Self::run_repl(db),
+        })
     }
 
-    // fn run_file(alice: &Alice, fpath: &Path) {
-    //     let contents = std::fs::read_to_string(fpath).expect("unable to read file");
-    // }
+    fn run_file(db: &dyn AcDbTrait, fpath: &Path) {
+        let contents = std::fs::read_to_string(fpath).expect("unable to read file");
+        let source_file = SourceFile::new(db, PathBuf::from(fpath), contents);
 
-    // fn run_repl(alice: &Alice) {
-    //     let input = stdin();
-    //     let mut reader = BufReader::new(input);
-    //     let mut line = String::new();
-    //     let mut output = stdout();
+        let ast = parse_file_query::parse_file(db, source_file);
+        let diags = parse_file_query::parse_file::accumulated::<Diagnostic>(db, source_file);
+        report(db, diags);
+    }
 
-    //     loop {
-    //         write!(&mut output, "🦊 >>> ").expect("unable to write prompt invitation");
-    //         output.flush().expect("unable to flush output writer");
+    fn run_repl(db: &dyn AcDbTrait) {
+        let input = stdin();
+        let mut reader = BufReader::new(input);
+        let mut line = String::new();
+        let mut output = stdout();
 
-    //         line.clear();
+        loop {
+            write!(&mut output, "🦊 >>> ").expect("unable to write prompt invitation");
+            output.flush().expect("unable to flush output writer");
 
-    //         match reader.read_line(&mut line) {
-    //             Ok(0) => break,
-    //             Ok(_) => (), // TODO: impl
-    //             Err(_) => break,
-    //         }
-    //     }
-    // }
+            line.clear();
+
+            match reader.read_line(&mut line) {
+                Ok(0) => break,
+                Ok(_) => (), // TODO: impl
+                Err(_) => break,
+            }
+        }
+    }
 }

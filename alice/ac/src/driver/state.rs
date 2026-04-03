@@ -1,5 +1,6 @@
 use std::{io, path::PathBuf, str::FromStr};
 
+use ac_interface::Config;
 use clap::Parser;
 use thiserror::Error;
 
@@ -17,16 +18,16 @@ impl Default for AliceDriver {
     }
 }
 
-// impl From<AliceDriver> for Config {
-//     fn from(value: AliceDriver) -> Self {
-//         let input = match value.input {
-//             AliceInput::Stdin => None,
-//             AliceInput::File(path_buf) => Some(path_buf),
-//         };
+impl From<AliceDriver> for Config {
+    fn from(value: AliceDriver) -> Self {
+        let input = match value.input {
+            AliceInput::Stdin => None,
+            AliceInput::File(path_buf) => Some(path_buf),
+        };
 
-//         Self { input }
-//     }
-// }
+        Self { input }
+    }
+}
 
 #[derive(Clone, Debug)]
 pub enum AliceInput {

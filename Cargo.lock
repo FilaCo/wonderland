@@ -6,6 +6,11 @@ version = 4
 name = "ac"
 version = "0.1.0"
 dependencies = [
+ "ac_db",
+ "ac_diag",
+ "ac_interface",
+ "ac_ir",
+ "ac_query",
  "ariadne",
  "clap",
  "dashmap",
@@ -16,18 +21,33 @@ dependencies = [
 name = "ac_db"
 version = "0.0.0"
 dependencies = [
+ "ac_ir",
+ "salsa",
+]
+
+[[package]]
+name = "ac_diag"
+version = "0.0.0"
+dependencies = [
+ "ac_db",
+ "ac_ir",
  "salsa",
 ]
 
 [[package]]
 name = "ac_interface"
 version = "0.0.0"
+dependencies = [
+ "ac_db",
+ "ac_ir",
+ "dashmap",
+ "salsa",
+]
 
 [[package]]
 name = "ac_ir"
 version = "0.0.0"
 dependencies = [
- "ac_db",
  "salsa",
 ]
 
@@ -46,6 +66,7 @@ name = "ac_query"
 version = "0.0.0"
 dependencies = [
  "ac_db",
+ "ac_diag",
  "ac_ir",
  "salsa",
 ]

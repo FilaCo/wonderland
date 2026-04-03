@@ -4,6 +4,11 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+ac_db.workspace = true
+ac_diag.workspace = true
+ac_interface.workspace = true
+ac_ir.workspace = true
+ac_query.workspace = true
 ariadne.workspace = true
 clap = { workspace = true, features = ["derive"] }
 dashmap.workspace = true
