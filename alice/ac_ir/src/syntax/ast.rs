@@ -38,4 +38,5 @@ pub enum ExprKind<'db> {
     LiteralConst {
         value: Token<'db>,
     },
+    Error,
 }

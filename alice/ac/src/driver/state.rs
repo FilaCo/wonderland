@@ -3,8 +3,6 @@ use std::{io, path::PathBuf, str::FromStr};
 use clap::Parser;
 use thiserror::Error;
 
-use crate::frontend::Config;
-
 #[derive(Parser, Clone, Debug)]
 #[command(version)]
 pub struct AliceDriver {
@@ -19,16 +17,16 @@ impl Default for AliceDriver {
     }
 }
 
-impl From<AliceDriver> for Config {
-    fn from(value: AliceDriver) -> Self {
-        let input = match value.input {
-            AliceInput::Stdin => None,
-            AliceInput::File(path_buf) => Some(path_buf),
-        };
+// impl From<AliceDriver> for Config {
+//     fn from(value: AliceDriver) -> Self {
+//         let input = match value.input {
+//             AliceInput::Stdin => None,
+//             AliceInput::File(path_buf) => Some(path_buf),
+//         };
 
-        Self { input }
-    }
-}
+//         Self { input }
+//     }
+// }
 
 #[derive(Clone, Debug)]
 pub enum AliceInput {
