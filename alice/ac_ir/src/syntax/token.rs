@@ -1,9 +1,25 @@
 use crate::source::Span;
 
-#[salsa::tracked(debug)]
+use TokenKind::*;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, salsa::Update)]
 pub struct Token<'db> {
     pub kind: TokenKind<'db>,
     pub span: Span<'db>,
+}
+
+impl<'db> Token<'db> {
+    pub const fn new(kind: TokenKind<'db>, span: Span<'db>) -> Self {
+        Self { kind, span }
+    }
+
+    pub const fn eoi(span: Span<'db>) -> Self {
+        Self::new(EndOfInput, span)
+    }
+
+    pub fn is_eoi(&self) -> bool {
+        self.kind == EndOfInput
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, salsa::Update)]
@@ -99,17 +115,20 @@ pub enum TokenKind<'db> {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, salsa::Update)]
 pub enum LiteralKind {
-    Int { base: Base },
-    Float { base: Base },
-    Rune { terminated: bool },
-    Str { terminated: bool },
+    Int { base: Base, empty_int: bool },
+    Float { base: Base, empty_exp: bool },
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, salsa::Update)]
+/// Base of numeric literal encoding according to its prefix.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, salsa::Update)]
 pub enum Base {
+    /// Literal starts with "0b" or "0B".
     Bin = 2,
+    /// Literal starts with "0o" or "0O".
     Oct = 8,
+    /// Literal doesn't contain a prefix.
     Dec = 10,
+    /// Literal starts with "0x" or "0X".
     Hex = 16,
 }
 

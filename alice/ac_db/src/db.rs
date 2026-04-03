@@ -4,7 +4,7 @@ use ac_ir::source::SourceFile;
 use salsa::Database;
 
 #[salsa::db]
-pub trait AcDbTrait: Database {
+pub trait AliceDatabaseTrait: Database {
     fn input(&self) -> Option<&Path>;
 
     fn get_source_file(&self, path: &Path) -> Option<SourceFile>;

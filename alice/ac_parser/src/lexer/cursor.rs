@@ -27,11 +27,19 @@ impl<'src> Cursor<'src> {
 
     /// Peeks the next symbol from the input stream without consuming it.
     /// If requested position doesn't exist, `EOF_CHAR` is returned.
-    /// However, getting `EOF_CHAR` doesn't always mean actual end of file,
-    /// it should be checked with `is_eof` method.
+    /// However, getting `EOI_CHAR` doesn't always mean actual end of file,
+    /// it should be checked with `is_eoI` method.
     pub fn first(&self) -> char {
         // `.next()` optimizes better than `.nth(0)`
         self.chars.clone().next().unwrap_or(EOI_CHAR)
+    }
+
+    /// Peeks the second symbol from the input stream without consuming it.
+    pub fn second(&self) -> char {
+        // `.next()` optimizes better than `.nth(1)`
+        let mut iter = self.chars.clone();
+        iter.next();
+        iter.next().unwrap_or(EOI_CHAR)
     }
 
     /// Moves to the next character.

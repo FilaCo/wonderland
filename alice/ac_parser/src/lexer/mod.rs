@@ -1,6 +1,5 @@
-mod advance_token;
 mod cursor;
-mod state;
+mod lexer;
 
-pub(super) use cursor::*;
-pub(super) use state::*;
+use cursor::*;
+pub use lexer::*;

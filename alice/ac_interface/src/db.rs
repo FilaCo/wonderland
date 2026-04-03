@@ -1,6 +1,6 @@
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
-use ac_db::db::AcDbTrait;
+use ac_db::db::AliceDatabaseTrait;
 use ac_ir::source::SourceFile;
 use salsa::Storage;
 
@@ -8,13 +8,13 @@ use crate::{Config, source_map::SourceMap};
 
 #[salsa::db]
 #[derive(Clone)]
-pub struct AcDb {
+pub struct AliceDatabase {
     storage: Storage<Self>,
     cfg: Config,
     sources: SourceMap,
 }
 
-impl AcDb {
+impl AliceDatabase {
     pub fn new(cfg: Config) -> Self {
         Self {
             storage: Storage::default(),
@@ -25,7 +25,7 @@ impl AcDb {
 }
 
 #[salsa::db]
-impl AcDbTrait for AcDb {
+impl AliceDatabaseTrait for AliceDatabase {
     fn input(&self) -> Option<&Path> {
         self.cfg.input.as_deref()
     }
@@ -37,4 +37,4 @@ impl AcDbTrait for AcDb {
     }
 }
 
-impl salsa::Database for AcDb {}
+impl salsa::Database for AliceDatabase {}

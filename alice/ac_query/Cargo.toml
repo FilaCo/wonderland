@@ -5,6 +5,5 @@ edition = "2024"
 
 [dependencies]
 ac_db.workspace = true
-ac_diag.workspace = true
 ac_ir.workspace = true
 salsa.workspace = true

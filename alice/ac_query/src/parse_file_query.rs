@@ -1,19 +1,8 @@
-use ac_db::db::AcDbTrait;
-use ac_diag::{Diagnostic, DiagnosticKind};
-use ac_ir::{
-    source::{SourceFile, Span},
-    syntax::AliceFile,
-};
-use salsa::Accumulator;
+use ac_db::db::AliceDatabaseTrait;
+use ac_ir::{source::SourceFile, syntax::AliceFile};
 
 #[salsa::tracked]
-pub fn parse_file(db: &dyn AcDbTrait, file: SourceFile) -> AliceFile<'_> {
+pub fn parse_file(db: &dyn AliceDatabaseTrait, file: SourceFile) -> AliceFile<'_> {
     db.add_source_file(file);
-    Diagnostic::new(
-        DiagnosticKind::Error,
-        String::from("what the heck"),
-        Span::new(db, 10, 150, file),
-    )
-    .accumulate(db);
     AliceFile::new(db, Vec::new())
 }

@@ -13,6 +13,7 @@ ariadne = { version = "0.6" }
 clap = { version = "4" }
 dashmap = { version = "6" }
 expect-test = { version = "1" }
+insta = { version = "1" }
 memchr = { version = "2" }
 salsa = { version = "0.26" }
 thiserror = { version = "2" }

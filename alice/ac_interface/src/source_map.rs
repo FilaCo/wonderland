@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-use ac_db::db::AcDbTrait;
+use ac_db::db::AliceDatabaseTrait;
 use ac_ir::source::SourceFile;
 use dashmap::{DashMap, Entry};
 
@@ -16,7 +16,7 @@ impl SourceMap {
         }
     }
 
-    pub fn add(&self, db: &dyn AcDbTrait, file: SourceFile) {
+    pub fn add(&self, db: &dyn AliceDatabaseTrait, file: SourceFile) {
         self.files.insert(file.path(db).clone(), file);
     }
 
