@@ -1,13 +1,14 @@
+use TokenKind::*;
 use ac_db::db::AliceDatabaseTrait;
 use ac_ir::{
     source::{SourceFile, Span},
     syntax::{Base, LiteralKind, Symbol, Token, TokenKind},
 };
-use unicode_xid::UnicodeXID;
 
-use crate::{lexer::Cursor, util::dummy_token};
-use LiteralKind::*;
-use TokenKind::*;
+use crate::{
+    lexer::{self, Cursor},
+    util::dummy_token,
+};
 
 pub struct Lexer<'db> {
     db: &'db dyn AliceDatabaseTrait,
@@ -27,7 +28,7 @@ impl<'db> Lexer<'db> {
             pos: 0,
         };
 
-        let _ = lexer.advance_token();
+        let _ = lexer.bump();
 
         lexer
     }
@@ -36,315 +37,77 @@ impl<'db> Lexer<'db> {
         &self.token
     }
 
-    pub fn advance_token(&mut self) -> Token<'db> {
-        if self.is_at_eoi() {
-            return self.token;
-        }
+    pub fn bump(&mut self) -> Token<'db> {
+        let next_tok = loop {
+            let (next_tok, is_next_tok_preceded_by_ws) = self.next_token_from_cursor();
 
-        let Some(first_char) = self.cursor.bump() else {
-            let span = self.make_span();
-            return std::mem::replace(&mut self.token, Token::eoi(span));
-        };
-
-        let kind = match first_char {
-            '/' => match self.cursor.first() {
-                '/' => self.line_comment(),
-                '*' => self.block_comment(),
-                _ => Slash,
-            },
-
-            c if is_whitespace(c) => self.whitespace(),
-
-            '\r' => match self.cursor.first() {
-                '\n' => {
-                    self.cursor.bump();
-                    NewLine
-                }
-                _ => self.whitespace(),
-            },
-            '\n' => NewLine,
-
-            '0'..='9' => {
-                let kind = self.number(first_char);
-                let symbol = self.make_symbol();
-                Literal { kind, symbol }
+            if is_next_tok_preceded_by_ws {
+                break next_tok;
+            } else if let Some(glued) = self.token.glue(&next_tok, self.db) {
+                self.token = glued;
+            } else {
+                break next_tok;
             }
-
-            c if is_ident_start(c) => self.ident(),
-
-            '=' => Eq,
-            '<' => Lt,
-            '>' => Gt,
-            '!' => Excl,
-            '+' => Plus,
-            '-' => Minus,
-            '*' => Star,
-            '.' => Dot,
-            ',' => Comma,
-            ';' => Semi,
-            ':' => Colon,
-            '?' => Quest,
-            '|' => Pipe,
-
-            '{' => LBrace,
-            '}' => RBrace,
-            '(' => LParen,
-            ')' => RParen,
-
-            _ => Unknown,
         };
+        std::mem::replace(&mut self.token, next_tok)
+    }
 
+    fn next_token_from_cursor(&mut self) -> (Token<'db>, bool) {
+        let mut preceded_by_ws = false;
+        let mut swallow_next_invalid = false;
+
+        // Skip whitespace & comments tokens
+        loop {
+            let str_before = self.cursor.as_str();
+            let cursor_tok = self.cursor.advance_token();
+            let start = self.pos;
+            self.pos += cursor_tok.len;
+
+            let kind = match cursor_tok.kind {
+                lexer::TokenKind::BlockComment { terminated } => {
+                    if !terminated {
+                        todo!() // TODO: diag
+                    }
+                    preceded_by_ws = true;
+                    continue;
+                }
+                lexer::TokenKind::LineComment => {
+                    preceded_by_ws = true;
+                    continue;
+                }
+                lexer::TokenKind::NewLine => todo!(),
+                lexer::TokenKind::Whitespace => {
+                    preceded_by_ws = true;
+                    continue;
+                }
+                lexer::TokenKind::Eq => Eq,
+                lexer::TokenKind::Lt => Lt,
+                lexer::TokenKind::Gt => Gt,
+                lexer::TokenKind::Excl => Excl,
+                lexer::TokenKind::Plus => Plus,
+                lexer::TokenKind::Minus => Minus,
+                lexer::TokenKind::Star => Star,
+                lexer::TokenKind::Slash => Slash,
+                lexer::TokenKind::Dot => Dot,
+                lexer::TokenKind::Comma => Comma,
+                lexer::TokenKind::Semi => Semi,
+                lexer::TokenKind::Colon => Colon,
+                lexer::TokenKind::Quest => Quest,
+                lexer::TokenKind::Pipe => Pipe,
+                lexer::TokenKind::LBrace => LBrace,
+                lexer::TokenKind::RBrace => RBrace,
+                lexer::TokenKind::LParen => LParen,
+                lexer::TokenKind::RParen => RParen,
+                lexer::TokenKind::Literal { kind } => todo!(),
+                lexer::TokenKind::Ident => todo!(),
+                lexer::TokenKind::Unknown => todo!(),
+                lexer::TokenKind::EndOfInput => EndOfInput,
+            };
+        }
         todo!()
     }
 
-    pub fn is_at_eoi(&self) -> bool {
-        self.token.is_eoi()
+    fn make_span(&self, start: usize, end: usize) -> Span<'db> {
+        Span::new(self.db, start, end, self.file)
     }
-
-    fn block_comment(&mut self) -> TokenKind<'db> {
-        self.cursor.bump();
-
-        let mut depth = 1usize;
-        while let Some(c) = self.cursor.bump() {
-            match c {
-                '/' if self.cursor.first() == '*' => {
-                    self.cursor.bump();
-                    depth += 1;
-                }
-                '*' if self.cursor.first() == '/' => {
-                    self.cursor.bump();
-                    depth -= 1;
-                    if depth == 0 {
-                        // This block comment is closed, so for a construction like "/* */ */"
-                        // there will be a successfully parsed block comment "/* */"
-                        // and " */" will be processed separately.
-                        break;
-                    }
-                }
-                _ => (),
-            }
-        }
-
-        BlockComment {
-            terminated: depth == 0,
-        }
-    }
-
-    fn line_comment(&mut self) -> TokenKind<'db> {
-        self.cursor.eat_until(b'\n');
-
-        LineComment
-    }
-
-    fn whitespace(&mut self) -> TokenKind<'db> {
-        self.cursor.eat_while(is_whitespace);
-
-        Whitespace
-    }
-
-    fn number(&mut self, first_digit: char) -> LiteralKind {
-        use Base::*;
-        let mut base = Dec;
-        if first_digit == '0' {
-            match self.cursor.first() {
-                'b' | 'B' => {
-                    base = Bin;
-                    self.cursor.bump();
-                    if !self.eat_dec_digits() {
-                        return Int {
-                            base,
-                            empty_int: true,
-                        };
-                    }
-                }
-                'o' | 'O' => {
-                    base = Oct;
-                    self.cursor.bump();
-                    if !self.eat_dec_digits() {
-                        return Int {
-                            base,
-                            empty_int: true,
-                        };
-                    }
-                }
-                'x' | 'X' => {
-                    base = Hex;
-                    self.cursor.bump();
-                    if !self.eat_hex_digits() {
-                        return Int {
-                            base,
-                            empty_int: true,
-                        };
-                    }
-                }
-                // Not a base prefix; eat additional digits
-                '0'..='9' | '_' => {
-                    self.eat_dec_digits();
-                }
-                // Also not a base prefix; nothing more to do here.
-                '.' | 'e' | 'E' => {}
-                // Just a 0.
-                _ => {
-                    return Int {
-                        base,
-                        empty_int: false,
-                    };
-                }
-            }
-        } else {
-            self.eat_dec_digits();
-        }
-
-        match self.cursor.first() {
-            '.' if !is_ident_start(self.cursor.second()) => {
-                // might have stuff after the ., and if it does, it needs to start
-                // with a number
-                self.cursor.bump();
-                let mut empty_exp = false;
-                if self.cursor.first().is_ascii_digit() {
-                    self.eat_dec_digits();
-                    match self.cursor.first() {
-                        'e' | 'E' => {
-                            self.cursor.bump();
-                            empty_exp = !self.eat_float_exp();
-                        }
-                        _ => (),
-                    }
-                }
-                Float { base, empty_exp }
-            }
-            'e' | 'E' => {
-                self.cursor.bump();
-                let empty_exp = !self.eat_float_exp();
-                Float { base, empty_exp }
-            }
-            _ => Int {
-                base,
-                empty_int: false,
-            },
-        }
-    }
-
-    fn eat_dec_digits(&mut self) -> bool {
-        let mut has_digits = false;
-        loop {
-            match self.cursor.first() {
-                '_' => {
-                    self.cursor.bump();
-                }
-                '0'..='9' => {
-                    has_digits = true;
-                    self.cursor.bump();
-                }
-                _ => return has_digits,
-            }
-        }
-    }
-
-    fn eat_hex_digits(&mut self) -> bool {
-        let mut has_digits = false;
-        loop {
-            match self.cursor.first() {
-                '_' => {
-                    self.cursor.bump();
-                }
-                c if c.is_ascii_hexdigit() => {
-                    has_digits = true;
-                    self.cursor.bump();
-                }
-                _ => return has_digits,
-            }
-        }
-    }
-
-    /// Eats the float exponent. Returns true if at least one digit was met,
-    /// and returns false otherwise.
-    fn eat_float_exp(&mut self) -> bool {
-        if self.cursor.first() == '+' || self.cursor.first() == '-' {
-            self.cursor.bump();
-        }
-
-        self.eat_dec_digits()
-    }
-
-    fn ident(&mut self) -> TokenKind<'db> {
-        self.cursor.bump();
-        self.cursor.eat_while(is_ident_continue);
-
-        Ident {
-            symbol: self.make_symbol(),
-        }
-    }
-
-    fn glue(&mut self, kind: TokenKind<'db>) -> TokenKind<'db> {
-        match kind {
-            Eq if self.cursor.first() == '=' => {
-                self.cursor.bump();
-                EqEq
-            }
-            Lt if self.cursor.first() == '=' => {
-                self.cursor.bump();
-                Le
-            }
-            Gt if self.cursor.first() == '=' => {
-                self.cursor.bump();
-                Ge
-            }
-            Excl if self.cursor.first() == '=' => {
-                self.cursor.bump();
-                Ne
-            }
-            Plus if self.cursor.first() == '=' => {
-                self.cursor.bump();
-                PlusEq
-            }
-            Minus if self.cursor.first() == '=' => {
-                self.cursor.bump();
-                MinusEq
-            }
-            Star if self.cursor.first() == '=' => {
-                self.cursor.bump();
-                StarEq
-            }
-            Slash if self.cursor.first() == '=' => {
-                self.cursor.bump();
-                SlashEq
-            }
-            Colon if self.cursor.first() == ':' => {
-                self.cursor.bump();
-                ColonColon
-            }
-            _ => kind,
-        }
-    }
-
-    fn make_span(&self) -> Span<'db> {
-        todo!()
-    }
-
-    fn make_symbol(&self) -> Symbol<'db> {
-        let src = self.file.contents(self.db);
-        let start = self.pos;
-        let end = self.pos + self.cursor.bumped_len();
-        let value = String::from(&src[start..end]);
-
-        Symbol::new(self.db, value)
-    }
-}
-
-fn is_whitespace(c: char) -> bool {
-    matches!(
-        c,
-        | '\u{0020}' // space
-        | '\u{0009}' // tab
-        | '\u{000C}' // form feed
-    )
-}
-
-fn is_ident_start(c: char) -> bool {
-    c == '_' || c.is_xid_start()
-}
-
-fn is_ident_continue(c: char) -> bool {
-    c.is_xid_continue()
 }

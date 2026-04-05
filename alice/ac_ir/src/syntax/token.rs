@@ -1,6 +1,7 @@
 use crate::source::Span;
 
 use TokenKind::*;
+use salsa::Database;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, salsa::Update)]
 pub struct Token<'db> {
@@ -20,23 +21,27 @@ impl<'db> Token<'db> {
     pub fn is_eoi(&self) -> bool {
         self.kind == EndOfInput
     }
+
+    pub fn glue(&self, joint: &Self, db: &'db dyn Database) -> Option<Self> {
+        let kind = match (self.kind, joint.kind) {
+            (Eq, Eq) => EqEq,
+            (Lt, Eq) => Le,
+            (Gt, Eq) => Ge,
+            (Excl, Eq) => Ne,
+            (Plus, Eq) => PlusEq,
+            (Minus, Eq) => MinusEq,
+            (Star, Eq) => StarEq,
+            (Slash, Eq) => SlashEq,
+            (Colon, Colon) => ColonColon,
+            _ => return None,
+        };
+
+        Some(Token::new(kind, self.span.to(&joint.span, db)))
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, salsa::Update)]
 pub enum TokenKind<'db> {
-    /// A block comment, e.g. `/* block comment */`.
-    ///
-    /// Block comments can be recursive, so a sequence like `/* /* */`
-    /// will not be considered terminated and will result in a parsing error.
-    ///
-    /// `BlockComment = "/*" { BlockComment | <any character> } "*/" .`
-    BlockComment { terminated: bool },
-    /// A line comment, e.g. `// comment`.
-    ///
-    /// `LineComment = "//" { <any character except CarriageReturn and LineFeed> } .`
-    LineComment,
-    /// `Whitespace = ( " " | "\t" | "\f" ) { ( " " | "\t" | "\f" ) } .`
-    Whitespace,
     /// `NewLine = LineFeed | ( CarriageReturn [ LineFeed ] )`
     NewLine,
 

@@ -41,6 +41,6 @@ impl<'db> Parser<'db> {
     }
 
     fn bump(&mut self) {
-        self.prev = std::mem::replace(&mut self.cur, self.lexer.advance_token());
+        self.prev = std::mem::replace(&mut self.cur, self.lexer.bump());
     }
 }
