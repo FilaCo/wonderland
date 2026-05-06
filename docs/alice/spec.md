@@ -1,20 +1,21 @@
 # Alice Language Specification <!-- omit from toc -->
 
 - [Introduction](#introduction)
-- [Notation](#notation)
-- [Source code representation](#source-code-representation)
-  - [Characters](#characters)
-  - [Letters and digits](#letters-and-digits)
-- [Lexical elements](#lexical-elements)
-  - [Comments](#comments)
-  - [Tokens](#tokens)
-  - [Semicolons](#semicolons)
-  - [Identifiers](#identifiers)
-  - [Keywords](#keywords)
-  - [Operators and punctuation](#operators-and-punctuation)
-  - [Integer literals](#integer-literals)
-  - [Floating-point literals](#floating-point-literals)
-- [Constants](#constants)
+- [Syntax and grammar](#syntax-and-grammar)
+  - [Notation](#notation)
+  - [Source code representation](#source-code-representation)
+    - [Characters](#characters)
+    - [Letters and digits](#letters-and-digits)
+  - [Lexical grammar](#lexical-grammar)
+    - [Whitespace and comments](#whitespace-and-comments)
+    - [Keywords and operators](#keywords-and-operators)
+    - [Literals](#literals)
+      - [Boolean literals](#boolean-literals)
+      - [Integer literals](#integer-literals)
+      - [Floating-point literals](#floating-point-literals)
+    - [Identifiers](#identifiers)
+    - [Tokens](#tokens)
+  - [Syntax grammar](#syntax-grammar)
 
 ## Introduction
 
@@ -28,7 +29,9 @@ The core idea behind Alice is that restricting developers to only these three EC
 2. **Maintainability** — composition over inheritance makes code easy to extend and refactor.
 3. **Simplicity** — no complex abstractions; the mental model stays small and approachable.
 
-## Notation
+## Syntax and grammar
+
+### Notation
 
 The syntax is specified using a [variant](https://en.wikipedia.org/wiki/Wirth_syntax_notation) of Extended Backus-Naur Form (EBNF):
 
@@ -61,18 +64,17 @@ CamelCase production names are used to identify lexical (terminal) tokens. Non-t
 
 The form `a … b` represents the set of characters from a through b as alternatives. The horizontal ellipsis `…` is also used elsewhere in the spec to informally denote various enumerations or code snippets that are not further specified. The character `…` is not a token of the Alice language.
 
-## Source code representation
+### Source code representation
 
 Source code is Unicode text encoded in [UTF-8](https://en.wikipedia.org/wiki/UTF-8). The text is not canonicalized, so a single accented code point is distinct from the same character constructed from combining an accent and a letter; those are treated as two code points. For simplicity, this document will use the unqualified term character to refer to a Unicode code point in the source text.
 
 Each code point is distinct; for instance, uppercase and lowercase letters are different characters.
 
-### Characters
+#### Characters
 
 The following terms are used to denote specific Unicode character categories:
 
 ```ebnf
-NewLine       = /* the Unicode code point U+000A */ .
 UnicodeChar   = /* an arbitrary Unicode code point except U+000A and U+000D */ .
 UnicodeLetter = /* a Unicode code point categorized as "Letter" */ .
 UnicodeDigit  = /* a Unicode code point categorized as "Number, decimal digit" */ .
@@ -80,7 +82,7 @@ UnicodeDigit  = /* a Unicode code point categorized as "Number, decimal digit" *
 
 In [The Unicode Standard 8.0](https://www.unicode.org/versions/Unicode8.0.0/), Section 4.5 "General Category" defines a set of character categories. Alice treats all characters in any of the Letter categories Lu, Ll, Lt, Lm, or Lo as Unicode letters, and those in the Number category Nd as Unicode digits.
 
-### Letters and digits
+#### Letters and digits
 
 The underscore character `_` (U+005F) is considered a lowercase letter.
 
@@ -92,9 +94,21 @@ OctDigit = "0" … "7" .
 HexDigit = "0" … "9" | "A" … "F" | "a" … "f" .
 ```
 
-## Lexical elements
+### Lexical grammar
 
-### Comments
+#### Whitespace and comments
+
+```ebnf
+LF           = /* the Unicode code point U+000A */ .
+CR           = /* the Unicode code point U+000D */ .
+
+BlockComment = "/*" { BlockComment | /* an arbitrary Unicode code point */ } "*/" .
+LineComment  = "//" { /* an arbitrary Unicode code point except LF and CR */ } .
+
+NL           = LF | ( CR [ LF ] ) .
+WS           = /* one of the following Unicode code points: SPACE U+0020, TAB U+0009, Form Feed U+000C */ .
+Hidden       = BlockComment | LineComment | WS
+```
 
 Comments serve as program documentation. There are two forms:
 
@@ -105,60 +119,59 @@ Block comments can be recursive, so a sequence like `/* /* */` is not valid.
 
 A block comment containing no newlines acts like a space. Any other comment acts like a newline.
 
-### Tokens
-
-Tokens form the vocabulary of the Alice language. There are four classes: identifiers, keywords, operators and punctuation, and literals. White space, formed from spaces (U+0020), horizontal tabs (U+0009), carriage returns (U+000D), and newlines (U+000A), is ignored except as it separates tokens that would otherwise combine into a single token. Also, a newline or end of file may trigger the insertion of a semicolon. While breaking the input into tokens, the next token is the longest sequence of characters that form a valid token.
-
-### Semicolons
-
-The formal syntax uses semicolons `;` as terminators in a number of productions. Alice programs may omit most of these semicolons using the following two rules:
-
-1. When the input is broken into tokens, a semicolon is automatically inserted into the token stream immediately after a line's final token if that token is
-    - an identifier
-    - an integer or floating-point literal
-    - one of the operators and punctuation `)`, `]`, or `}`
-2. To allow complex statements to occupy a single line, a semicolon may be omitted before a closing `)` or `}`.
-
-To reflect idiomatic use, code examples in this document elide semicolons using these rules.
-
-### Identifiers
-
-Identifiers name program entities such as variables and types. An identifier is a sequence of one or more letters and digits. The first character in an identifier must be a letter.
+#### Keywords and operators
 
 ```ebnf
-Ident = Letter { Letter | UnicodeDigit } .
+Amp     = "&" .
+Comma   = "," .
+Colon   = ":" .
+Dot     = "." .
+Eq      = "=" .
+Excl    = "!" .
+LT      = "<" .
+Minus   = "-" .
+Percent = "%" .
+Pipe    = "|" .
+Plus    = "+" .
+Quest   = "?" .
+Semi    = ";" .
+Slash   = "/" .
+Star    = "*" .
+Tilde   = "~" .
+
+LParen = "(" .
+RParen = ")" .
+LBrace = "{" .
+RBrace = "}" .
+
+Conj       = "&&" .
+Disj       = "||" .
+EqEq       = "==" .
+ColonColon = "::" .
+GE         = ">=" .
+LE         = "<=" .
+
+Const     = "const" .
+Despawn   = "despawn" .
+Filter    = "filter" .
+Mut       = "mut" .
+Namespace = "namespace" .
+Prop      = "prop" .
+Query     = "query" .
+Spawn     = "spawn" .
+Using     = "using" .
+With      = "with" .
 ```
 
-```text
-a
-_x9
-αβ
+#### Literals
+
+##### Boolean literals
+
+```ebnf
+BoolLit = "true" | "false" .
 ```
 
-### Keywords
-
-The following keywords are reserved and may not be used as identifiers.
-
-```text
-const     mut         prop
-despawn   namespace   query
-filter    not         spawn
-has       or          using
-```
-
-### Operators and punctuation
-
-The following character sequences represent operators and punctuation:
-
-```text
-+   &   ==    !=    (   )   ::
--   |   <     <=    [   ]
-*   ^   >     >=    {   }
-/   <<  =           ,   ;
-%   >>  ~           .   :  
-```
-
-### Integer literals
+##### Integer literals
 
 An integer literal is a sequence of digits representing an integer constant. An optional prefix sets a non-decimal base: `0b` or `0B` for binary, `0`, `0o`, or `0O` for octal, and `0x` or `0X` for hexadecimal. A single `0` is considered a decimal zero. In hexadecimal literals, letters `a` through `f` and `A` through `F` represent values `10` through `15`.
 
@@ -197,7 +210,7 @@ _42         // an identifier, not an integer literal
 0_xBadFace  // invalid: _ must separate successive digits
 ```
 
-### Floating-point literals
+##### Floating-point literals
 
 A floating-point literal is a decimal or hexadecimal representation of a floating-point constant.
 
@@ -253,14 +266,129 @@ FloatLit    = DecFloatLit | HexFloatLit .
 1.5e1_       // invalid: _ must separate successive digits
 ```
 
-## Constants
+#### Identifiers
 
-There are *boolean constants*, *integer constants*, and *floating-point constants*. Integer and floating-point constants are collectively called *numeric constants*.
+Identifiers name program entities such as variables and types. An identifier is a sequence of one or more letters and digits. The first character in an identifier must be a letter.
 
-A constant value is represented by an [integer](#integer-literals) or [floating-point](#floating-point-literals) literal, an identifier denoting a constant, a constant expression, or a conversion with a result that is a constant. The boolean truth values are represented by the predeclared constants `true` and `false`.
+Alice supports *escaping* identifiers by enclosing any sequence of characters into backtick quotes `` ` ``, allowing to use any name as an identifier. This allows not only using non-alphanumeric characters (like `@` or `#`) in names, but also using keywords like `query` or `prop` as identifiers.
 
-Integer constants are 64-bit signed values. Floating-point constants are IEEE 754 double-precision (64-bit) values.
+Escaped identifiers are treated the same as corresponding non-escaped identifier if it is allowed. For example, an escaped identifier `` `foo` `` and non-escaped identifier `foo` may be used interchangeably and refer to the same program entity.
 
-A constant may have an explicitly declared type, or its type is inferred from the initializer. It is an error if the constant value cannot be represented as a value of the respective type.
+```ebnf
+QuotedSymbol = /* an arbitrary Unicode code point except LF, CR and "`" */ .
+RawIdent     = "`" QuotedSymbol { QuotedSymbol } "`" .
+Ident        = Letter { Letter | UnicodeDigit } .
+```
 
-Untyped numeric constants assume a default type when a type is required: `int` for integer constants and `float` for floating-point constants.
+```text
+a
+_x9
+αβ
+`foo` // the same as foo
+```
+
+#### Tokens
+
+These are all valid tokens in one rule. Note that syntax grammar ignores tokens that matches [Hidden](#whitespace-and-comments) rule.
+
+```ebnf
+AliceToken = BlockComment
+           | LineComment
+           | WS
+           | NL
+           | Amp
+           | Comma
+           | Dot
+           | Eq
+           | Excl
+           | LT
+           | Minus
+           | Percent
+           | Pipe
+           | Plus
+           | Quest
+           | Semi
+           | Slash
+           | Star
+           | Tilde
+           | LParen
+           | RParen
+           | LBrace
+           | RBrace
+           | Conj
+           | Disj
+           | EqEq
+           | ColonColon
+           | GE
+           | LE
+           | Const
+           | Despawn
+           | Filter
+           | Mut
+           | Namespace
+           | Prop
+           | Query
+           | Spawn
+           | Using
+           | With
+           | BoolLit
+           | RawIdent
+           | Ident
+           | IntLit
+           | FloatLit
+
+EOF        = /* end of input */ .
+```
+
+### Syntax grammar
+
+The grammar below replaces some lexical grammar rules with explicit literals (where such replacement in trivial and always correct, for example, for keywords) for better readability.
+
+```ebnf
+alice_file = { top_level_obj [ semis ] } EOF .
+
+top_level_obj = using_stmt
+              | decl .
+
+using_stmt = "using" ident_path .
+
+decl = prop_decl
+     | const_decl
+     | namespace_decl .
+
+prop_decl      = "prop" ident [ prop_body ] .
+prop_body      = enum_prop_body
+               | record_prop_body
+               | tuple_prop_body .
+
+enum_prop_body = "=" enum_ctors .
+enum_ctors     = enum_ctor { "|" enum_ctor } .
+enum_ctor      = ident [ "(" ident_path { "," ident_path } ")" ] .
+
+record_prop_body = "{" field_decls "}" .
+field_decls      = field_decl { "," field_decl } [ "," ] .
+field_decl       = ident ":" ident_path .
+
+tuple_prop_body = "(" ident_path { "," ident_path } ")" .
+
+const_decl = "const" ident [ ":" ident_path ] "=" expression .
+
+namespace_decl  = "namespace" ident_path namespace_scope .
+namespace_scope = "{" { top_level_obj [semis] } "}" .
+
+expression  = disjunction .
+disjunction = conjunction { "||" conjunction } .
+conjunction = equality { "&&" equality } .
+equality    = comparison { ( "!=" | "==" ) comparison } .
+comparison  = term { ( "<" | ">" | "<=" | ">=" ) term } .
+term        = factor { ( "+" | "-" ) factor } .
+factor      = unary { ( "*" | "/" ) unary } .
+unary       = ( "!" | "-" ) unary | primary .
+primary     = literal | "(" expression ")" .
+literal     = BoolLit | IntLit | FloatLit .
+
+ident_path = ["::"] ident { "::" ident } .
+ident      = RawIdent | Ident .
+
+semis = ";" | NL { ";" | NL } .
+```
