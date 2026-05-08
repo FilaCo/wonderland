@@ -158,10 +158,12 @@ Erase     = "erase" .
 Filter    = "filter" .
 In        = "in" .
 Match     = "match" .
+Mod       = "mod" .
 Mut       = "mut" .
 Prop      = "prop" .
 Query     = "query" .
 Spawn     = "spawn" .
+Use       = "use" .
 With      = "with" .
 Without   = "without" .
 ```
@@ -331,10 +333,12 @@ AliceToken = BlockComment
            | Filter
            | In
            | Match
+           | Mod
            | Mut
            | Prop
            | Query
            | Spawn
+           | Use
            | With
            | Without
            | BoolLit
@@ -351,46 +355,83 @@ EOF        = /* end of input */ .
 The grammar below replaces some lexical grammar rules with explicit literals (where such replacement in trivial and always correct, for example, for keywords) for better readability.
 
 ```ebnf
-alice_file = { top_level_obj [ semis ] } EOF .
+alice_file = { top_level_obj } EOF .
 
-top_level_obj = sys_stmt
-              | decl .
+top_level_obj = ( top_level_stmt | top_level_decl ) [ semis ] .
 
-sys_stmt = "in" ident "{" "}" .
+top_level_stmt = sys_stmt 
+               | use_stmt .
 
-decl = prop_decl
-     | const_decl .
+sys_stmt   = "in" ident pipe_stmt .
+pipe_stmt  = "query" params_list { pipeline_stage } .
+pipeline_stage = despawn_stage
+               | derive_stage
+               | erase_stage
+               | fetch_stage
+               | filter_stage
+               | spawn_stage
+               | with_stage
+               | without_stage
 
-prop_decl      = "prop" ident [ prop_body ] .
+despawn_stage = "despawn" [ ref_expr { "," ref_expr } ] .
+
+derive_stage = "derive" block_expr | assign_expr .
+
+erase_stage = "erase" ref_expr { "," ref_expr } [ "from" ref_expr ] .
+
+fetch_stage = "fetch" params_list "from" ref_expr .
+
+filter_stage = "filter" expr .
+
+spawn 
+
+use_stmt = "use" ident [ "::" "*" ] .
+
+top_level_decl = const_decl
+               | mod_decl
+               | prop_decl
+               | sys_decl .
+
+const_decl = "const" simple_ident [ ":" type ] "=" expr .
+
+mod_decl  = "mod" simple_ident [ mod_scope ] .
+mod_scope = "{" { top_level_obj } "}" .
+
+prop_decl      = "prop" simple_ident [ prop_body ] .
 prop_body      = enum_prop_body
                | record_prop_body
                | tuple_prop_body .
 
-enum_prop_body = "=" enum_ctors .
-enum_ctors     = enum_ctor { "|" enum_ctor } .
-enum_ctor      = ident [ "(" ident { "," ident } ")" ] .
+enum_prop_body = "=" enum_ctor { [ NL ] "|" enum_ctor } .
+enum_ctor      = simple_ident [ "(" types_list ")" ] .
 
 record_prop_body = "{" field_decls "}" .
 field_decls      = field_decl { [ semis ] field_decl } [ semis ] .
-field_decl       = ident ":" ident .
+field_decl       = simple_ident ":" type .
 
-tuple_prop_body = "(" ident { "," ident } ")" .
+tuple_prop_body = "(" types_list ")" .
 
-const_decl = "const" ident [ ":" ident ] "=" expression .
+expr            = disj_expr .
+disj_expr       = conj_expr { "||" conj_expr } .
+conj_expr       = equality_expr { "&&" equality_expr } .
+equality_expr   = comparison_expr { ( "!=" | "==" ) comparison_expr } .
+comparison_expr = term_expr { ( "<" | ">" | "<=" | ">=" ) term_expr } .
+term_expr       = factor_expr { ( "+" | "-" ) factor_expr } .
+factor_expr     = unary_expr { ( "*" | "/" ) unary_expr } .
+unary_expr      = ( "!" | "-" ) unary_expr | primary_expr .
+primary_expr    = ref_expr | lit_expr | "(" expr ")" .
+ref_expr        = ident .
+lit_expr        = BoolLit | IntLit | FloatLit .
+assign_expr     = 
 
-expression  = disjunction .
-disjunction = conjunction { "||" conjunction } .
-conjunction = equality { "&&" equality } .
-equality    = comparison { ( "!=" | "==" ) comparison } .
-comparison  = term { ( "<" | ">" | "<=" | ">=" ) term } .
-term        = factor { ( "+" | "-" ) factor } .
-factor      = unary { ( "*" | "/" ) unary } .
-unary       = ( "!" | "-" ) unary | primary .
-primary     = reference | literal | "(" expression ")" .
-reference   = ident .
-literal     = BoolLit | IntLit | FloatLit .
+params_list = param { "," param } .
+param       = simple_ident ":" type .
 
-ident      = RawIdent | Ident .
+types_list   = type { "," type } .
+type         = [ "?" ] ident .
+ident        = simple_ident { "::" simple_ident } .
+simple_ident = RawIdent | Ident .
 
 semis = ";" | NL { ";" | NL } .
+semi  = ( ";" | NL ) { NL } .
 ```
