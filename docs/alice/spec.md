@@ -36,12 +36,12 @@ The core idea behind Alice is that restricting developers to only these three EC
 The syntax is specified using a [variant](https://en.wikipedia.org/wiki/Wirth_syntax_notation) of Extended Backus-Naur Form (EBNF):
 
 ```ebnf
-syntax      = { production } .
-production  = ProductionName "=" [ expression ] "." .
-expression  = term { "|" term } .
-term        = factor { factor } .
+syntax      = {production} .
+production  = ProductionName "=" [expression] "." .
+expression  = term {"|" term} .
+term        = factor {factor} .
 factor      = ProductionName 
-            | Token [ "…" Token ] 
+            | Token ["…" Token] 
             | group 
             | option 
             | repetition .
@@ -87,11 +87,11 @@ In [The Unicode Standard 8.0](https://www.unicode.org/versions/Unicode8.0.0/), S
 The underscore character `_` (U+005F) is considered a lowercase letter.
 
 ```ebnf
-Letter   = UnicodeLetter | "_" .
+Letter   = UnicodeLetter|"_" .
 DecDigit = "0" … "9" .
-BinDigit = "0" | "1" .
+BinDigit = "0"|"1" .
 OctDigit = "0" … "7" .
-HexDigit = "0" … "9" | "A" … "F" | "a" … "f" .
+HexDigit = "0" … "9"|"A" … "F"|"a" … "f" .
 ```
 
 ### Lexical grammar
@@ -102,12 +102,12 @@ HexDigit = "0" … "9" | "A" … "F" | "a" … "f" .
 LF           = /* the Unicode code point U+000A */ .
 CR           = /* the Unicode code point U+000D */ .
 
-BlockComment = "/*" { BlockComment | /* an arbitrary Unicode code point */ } "*/" .
-LineComment  = "//" { /* an arbitrary Unicode code point except LF and CR */ } .
+BlockComment = "/*" {BlockComment|/* an arbitrary Unicode code point */} "*/" .
+LineComment  = "//" {/* an arbitrary Unicode code point except LF and CR */} .
 
-NL           = LF | ( CR [ LF ] ) .
+NL           = LF|(CR[LF]) .
 WS           = /* one of the following Unicode code points: SPACE U+0020, TAB U+0009, Form Feed U+000C */ .
-Hidden       = BlockComment | LineComment | WS
+Hidden       = BlockComment|LineComment|WS
 ```
 
 Comments serve as program documentation. There are two forms:
@@ -150,22 +150,28 @@ EqEq       = "==" .
 ColonColon = "::" .
 GE         = ">=" .
 LE         = "<=" .
+MinusEq    = "-=" .
+NotEq      = "!=" .
+PercentEq  = "%=" .
+PlusEq     = "+=" .
+SlashEq    = "/=" .
+StarEq     = "*=" .
 
-Const     = "const" .
-Derive    = "derive" .
-Despawn   = "despawn" .
-Erase     = "erase" .
-Filter    = "filter" .
-In        = "in" .
-Match     = "match" .
-Mod       = "mod" .
-Mut       = "mut" .
-Prop      = "prop" .
-Query     = "query" .
-Spawn     = "spawn" .
-Use       = "use" .
-With      = "with" .
-Without   = "without" .
+Const   = "const" .
+Derive  = "derive" .
+Despawn = "despawn" .
+Erase   = "erase" .
+Filter  = "filter" .
+In      = "in" .
+Match   = "match" .
+Mod     = "mod" .
+Mut     = "mut" .
+Prop    = "prop" .
+Query   = "query" .
+Spawn   = "spawn" .
+Use     = "use" .
+With    = "with" .
+Without = "without" .
 ```
 
 #### Literals
@@ -173,7 +179,7 @@ Without   = "without" .
 ##### Boolean literals
 
 ```ebnf
-BoolLit = "true" | "false" .
+BoolLit = "true"|"false" .
 ```
 
 ##### Integer literals
@@ -183,17 +189,17 @@ An integer literal is a sequence of digits representing an integer constant. An 
 For readability, an underscore character `_` may appear after a base prefix or between successive digits; such underscores do not change the literal's value.
 
 ```ebnf
-DecDigits = DecDigit { [ "_" ] DecDigit } .
-BinDigits = BinDigit { [ "_" ] BinDigit } .
-OctDigits = OctDigit { [ "_" ] OctDigit } .
-HexDigits = HexDigit { [ "_" ] HexDigit } .
+DecDigits = DecDigit {["_"] DecDigit} .
+BinDigits = BinDigit {["_"] BinDigit} .
+OctDigits = OctDigit {["_"] OctDigit} .
+HexDigits = HexDigit {["_"] HexDigit} .
 
-DecLit    = "0" | ( "1" … "9" ) [ [ "_" ] DecDigits ] .
-BinLit    = "0" ( "b" | "B" ) [ "_" ] BinDigits .
-OctLit    = "0" [ "o" | "O" ] [ "_" ] OctDigits .
-HexLit    = "0" ( "x" | "X" ) [ "_" ] HexDigits .
+DecLit    = "0"|("1" … "9") [["_"] DecDigits] .
+BinLit    = "0" ("b"|"B") ["_"] BinDigits .
+OctLit    = "0" ["o"|"O"] ["_"] OctDigits .
+HexLit    = "0" ("x"|"X") ["_"] HexDigits .
 
-IntLit    = DecLit | BinLit | OctLit | HexLit .
+IntLit    = DecLit|BinLit|OctLit|HexLit .
 ```
 
 ```text
@@ -226,19 +232,19 @@ A hexadecimal floating-point literal consists of a `0x` or `0X` prefix, an integ
 For readability, an underscore character `_` may appear after a base prefix or between successive digits; such underscores do not change the literal value.
 
 ```ebnf
-DecExponent = ( "e" | "E" ) [ "+" | "-" ] DecDigits .
-DecFloatLit = DecDigits "." [ DecDigits ] [ DecExponent ]
+DecExponent = ("e"|"E") ["+"|"-"] DecDigits .
+DecFloatLit = DecDigits "." [DecDigits] [DecExponent]
             | DecDigits DecExponent
-            | "." DecDigits [ DecExponent ] .
+            | "." DecDigits [DecExponent] .
 
-HexExponent = ( "p" | "P" ) [ "+" | "-" ] DecDigits .
-HexMantissa = [ "_" ] HexDigits "." [ HexDigits ]
-            | [ "_" ] HexDigits
+HexExponent = ("p"|"P") ["+"|"-"] DecDigits .
+HexMantissa = ["_"] HexDigits "." [HexDigits]
+            | ["_"] HexDigits
             | "." HexDigits .
 
-HexFloatLit = "0" ( "x" | "X" ) HexMantissa HexExponent .
+HexFloatLit = "0" ("x"|"X") HexMantissa HexExponent .
 
-FloatLit    = DecFloatLit | HexFloatLit .
+FloatLit    = DecFloatLit|HexFloatLit .
 ```
 
 ```text
@@ -281,8 +287,8 @@ Escaped identifiers are treated the same as corresponding non-escaped identifier
 
 ```ebnf
 QuotedSymbol = /* an arbitrary Unicode code point except LF, CR and "`" */ .
-RawIdent     = "`" QuotedSymbol { QuotedSymbol } "`" .
-Ident        = Letter { Letter | UnicodeDigit } .
+RawIdent     = "`" QuotedSymbol {QuotedSymbol} "`" .
+Ident        = Letter {Letter|UnicodeDigit} .
 ```
 
 ```text
@@ -326,6 +332,12 @@ AliceToken = BlockComment
            | ColonColon
            | GE
            | LE
+           | MinusEq
+           | NotEq
+           | PercentEq
+           | PlusEq
+           | StarEq
+           | SlashEq
            | Const
            | Derive
            | Despawn
@@ -355,83 +367,80 @@ EOF        = /* end of input */ .
 The grammar below replaces some lexical grammar rules with explicit literals (where such replacement in trivial and always correct, for example, for keywords) for better readability.
 
 ```ebnf
-alice_file = { top_level_obj } EOF .
+alice_file = {top_level_obj} EOF .
 
-top_level_obj = ( top_level_stmt | top_level_decl ) [ semis ] .
+top_level_obj = (top_level_stmt|top_level_decl) [semis] .
 
-top_level_stmt = sys_stmt 
-               | use_stmt .
+top_level_stmt = use_stmt .
 
-sys_stmt   = "in" ident pipe_stmt .
-pipe_stmt  = "query" params_list { pipeline_stage } .
-pipeline_stage = despawn_stage
-               | derive_stage
-               | erase_stage
-               | fetch_stage
-               | filter_stage
-               | spawn_stage
-               | with_stage
-               | without_stage
-
-despawn_stage = "despawn" [ ref_expr { "," ref_expr } ] .
-
-derive_stage = "derive" block_expr | assign_expr .
-
-erase_stage = "erase" ref_expr { "," ref_expr } [ "from" ref_expr ] .
-
-fetch_stage = "fetch" params_list "from" ref_expr .
-
-filter_stage = "filter" expr .
-
-spawn 
-
-use_stmt = "use" ident [ "::" "*" ] .
+use_stmt       = "use" ident ["::" "*"] .
 
 top_level_decl = const_decl
                | mod_decl
                | prop_decl
                | sys_decl .
 
-const_decl = "const" simple_ident [ ":" type ] "=" expr .
+const_decl = "const" simple_ident [type_anno] "=" expr .
 
-mod_decl  = "mod" simple_ident [ mod_scope ] .
-mod_scope = "{" { top_level_obj } "}" .
+mod_decl  = "mod" simple_ident [mod_body] .
+mod_body  = "{" {top_level_obj} "}" .
 
-prop_decl      = "prop" simple_ident [ prop_body ] .
+prop_decl      = "prop" simple_ident [prop_body] .
 prop_body      = enum_prop_body
                | record_prop_body
                | tuple_prop_body .
 
-enum_prop_body = "=" enum_ctor { [ NL ] "|" enum_ctor } .
-enum_ctor      = simple_ident [ "(" types_list ")" ] .
+enum_prop_body = "=" enum_ctor {[NL] "|" enum_ctor} .
+enum_ctor      = simple_ident ["(" types_list ")"] .
 
 record_prop_body = "{" field_decls "}" .
-field_decls      = field_decl { [ semis ] field_decl } [ semis ] .
+field_decls      = field_decl { [semis] field_decl } [semis] .
 field_decl       = simple_ident ":" type .
 
 tuple_prop_body = "(" types_list ")" .
 
+sys_stmt       = "in" {NL} ident {NL} sys_body .
+sys_body       = "{" {NL} pipeline {NL} "}" .
+pipeline       = spawn_expr|despawn_expr|query_expr .
+
 expr            = disj_expr .
-disj_expr       = conj_expr { "||" conj_expr } .
-conj_expr       = equality_expr { "&&" equality_expr } .
-equality_expr   = comparison_expr { ( "!=" | "==" ) comparison_expr } .
-comparison_expr = term_expr { ( "<" | ">" | "<=" | ">=" ) term_expr } .
-term_expr       = factor_expr { ( "+" | "-" ) factor_expr } .
-factor_expr     = unary_expr { ( "*" | "/" ) unary_expr } .
-unary_expr      = ( "!" | "-" ) unary_expr | primary_expr .
-primary_expr    = ref_expr | lit_expr | "(" expr ")" .
+disj_expr       = conj_expr {{NL} "||" {NL} conj_expr} .
+conj_expr       = eq_expr {{NL} "&&" {NL} eq_expr} .
+eq_expr         = cmp_expr {eq_op {NL} cmp_expr} .
+cmp_expr        = term_expr {cmp_op {NL} term_expr} .
+term_expr       = factor_expr {add_op {NL} factor_expr} .
+factor_expr     = unary_expr {mul_op unary_expr} .
+unary_expr      = unary_op unary_expr | primary_expr .
+primary_expr    = paren_expr
+                | ref_expr
+                | lit_const_expr .
+paren_expr      = "(" {NL} expr {NL} ")" .
 ref_expr        = ident .
-lit_expr        = BoolLit | IntLit | FloatLit .
-assign_expr     = 
+lit_const_expr  = BoolLit | IntLit | FloatLit .
+assign_expr     = expr "=" expr .
 
-params_list = param { "," param } .
-param       = simple_ident ":" type .
+eq_op  = "==" 
+       | "!=" .
+cmp_op = "<" 
+       | ">" 
+       | "<=" 
+       | ">=" .
+add_op = "+" 
+       | "-" .
+mul_op = "*" 
+       | "/" 
+       | "%" .
+unary_op = "!" | "-" .
 
-types_list   = type { "," type } .
-type         = [ "?" ] ident .
-ident        = simple_ident { "::" simple_ident } .
-simple_ident = RawIdent | Ident .
+params_list = param {"," param} .
+param       = simple_ident type_anno .
 
-semis = ";" | NL { ";" | NL } .
-semi  = ( ";" | NL ) { NL } .
+type_anno    = ":" type .
+types_list   = type {"," type} .
+type         = ["?"] ident .
+ident        = simple_ident {"::" simple_ident} .
+simple_ident = RawIdent|Ident .
+
+semis = ";"|NL {";"|NL} .
+semi  = (";"|NL) {NL} .
 ```
