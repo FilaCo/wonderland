@@ -14,25 +14,30 @@ impl<'db> Token<'db> {
         Self { kind, span }
     }
 
-    pub const fn eoi(span: Span<'db>) -> Self {
-        Self::new(EndOfInput, span)
+    pub const fn eof(span: Span<'db>) -> Self {
+        Self::new(EOF, span)
     }
 
-    pub fn is_eoi(&self) -> bool {
-        self.kind == EndOfInput
+    pub fn is_eof(&self) -> bool {
+        self.kind == EOF
     }
 
     pub fn glue(&self, joint: &Self, db: &'db dyn Database) -> Option<Self> {
         let kind = match (self.kind, joint.kind) {
-            (Eq, Eq) => EqEq,
-            (Lt, Eq) => Le,
-            (Gt, Eq) => Ge,
-            (Excl, Eq) => Ne,
-            (Plus, Eq) => PlusEq,
-            (Minus, Eq) => MinusEq,
-            (Star, Eq) => StarEq,
-            (Slash, Eq) => SlashEq,
+            (And, And) => Conj,
             (Colon, Colon) => ColonColon,
+            (Or, Or) => Disj,
+            (Dot, Dot) => DotDot,
+            (Eq, Eq) => EqEq,
+            (GT, Eq) => GE,
+            (LT, Eq) => LE,
+            (Minus, Eq) => MinusEq,
+            (Excl, Eq) => NE,
+            (Percent, Eq) => PercentEq,
+            (Or, GT) => Pipe,
+            (Plus, Eq) => PlusEq,
+            (Slash, Eq) => SlashEq,
+            (Star, Eq) => StarEq,
             _ => return None,
         };
 
@@ -42,37 +47,42 @@ impl<'db> Token<'db> {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, salsa::Update)]
 pub enum TokenKind<'db> {
-    /// `NewLine = LineFeed | ( CarriageReturn [ LineFeed ] )`
-    NewLine,
-
-    /// `=`
-    Eq,
-    /// `<`
-    Lt,
-    /// `>`
-    Gt,
-    /// `!`
-    Excl,
-    /// `+`
-    Plus,
-    /// `-`
-    Minus,
-    /// `*`
-    Star,
-    /// `/`
-    Slash,
-    /// `.`
-    Dot,
+    /// `LF | ( CR [ LF ] )`
+    NL,
+    /// `&`
+    And,
     /// `,`
     Comma,
-    /// `;`
-    Semi,
     /// `:`
     Colon,
+    /// `.`
+    Dot,
+    /// `=`
+    Eq,
+    /// `!`
+    Excl,
+    /// `>`
+    GT,
+    /// `<`
+    LT,
+    /// `-`
+    Minus,
+    /// `|`
+    Or,
+    /// `%`
+    Percent,
+    /// `+`
+    Plus,
     /// `?`
     Quest,
-    /// `|`
-    Pipe,
+    /// `;`
+    Semi,
+    /// `/`
+    Slash,
+    /// `*`
+    Star,
+    /// `~`
+    Tilde,
 
     /// `{`
     LBrace,
@@ -83,24 +93,76 @@ pub enum TokenKind<'db> {
     /// `)`
     RParen,
 
-    /// `==`
-    EqEq,
-    /// `!=`
-    Ne,
-    /// `<=`
-    Le,
-    /// `>=`
-    Ge,
-    /// `+=`
-    PlusEq,
-    /// `-=`
-    MinusEq,
-    /// `*=`
-    StarEq,
-    /// `/=`
-    SlashEq,
+    /// `&&`
+    Conj,
     /// `::`
     ColonColon,
+    /// `||`
+    Disj,
+    /// `..`
+    DotDot,
+    /// `==`
+    EqEq,
+    /// `>=`
+    GE,
+    /// `<=`
+    LE,
+    /// `-=`
+    MinusEq,
+    /// `!=`
+    NE,
+    /// `%=`
+    PercentEq,
+    /// `|>`
+    Pipe,
+    /// `+=`
+    PlusEq,
+    /// `/=`
+    SlashEq,
+    /// `*=`
+    StarEq,
+
+    /// `const`
+    Const,
+    /// `derive`
+    Derive,
+    /// `despawn`
+    Despawn,
+    /// `erase`
+    Erase,
+    /// `filter`
+    Filter,
+    /// `from`
+    From,
+    /// `in`
+    In,
+    /// `into`
+    Into,
+    /// `insert`
+    Insert,
+    /// `match`
+    Match,
+    /// `mod`
+    Mod,
+    /// `mut`
+    Mut,
+    /// `prop`
+    Prop,
+    /// `query`
+    Query,
+    /// `spawn`
+    Spawn,
+    /// `use`
+    Use,
+    /// `with`
+    With,
+    /// `without`
+    Without,
+
+    /// An escaped identifier, e.g. `` `ident` ``.
+    RawIdent { symbol: Symbol<'db> },
+    /// An identifier e.g. `ident`.
+    Ident { symbol: Symbol<'db> },
 
     /// A literal constant value, e.g. `123` or `"hello"`.
     Literal {
@@ -108,14 +170,8 @@ pub enum TokenKind<'db> {
         symbol: Symbol<'db>,
     },
 
-    /// An identifier or keyword, e.g. `ident` or `prop`.
-    Ident { symbol: Symbol<'db> },
-
-    /// Unknown token, not expected by the lexer, e.g. "№".
-    Unknown,
-
     /// End of input.
-    EndOfInput,
+    EOF,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, salsa::Update)]

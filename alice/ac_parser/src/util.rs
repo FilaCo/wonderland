@@ -5,6 +5,5 @@ use ac_ir::{
 };
 
 pub fn dummy_token(db: &dyn AliceDatabaseTrait, file: SourceFile) -> Token<'_> {
-    use TokenKind::*;
-    Token::new(Quest, Span::new(db, 0, 0, file))
+    Token::new(TokenKind::Quest, Span::new(db, 0, 0, file))
 }

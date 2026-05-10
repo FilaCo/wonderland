@@ -1,36 +1,29 @@
-use std::str::Chars;
+use ac_ir::syntax::{Base, LiteralKind};
+use unicode_xid::UnicodeXID;
+
+use crate::lexer::cursor::{Cursor, Token, TokenKind};
 
 use LiteralKind::*;
 use TokenKind::*;
-use ac_ir::syntax::{Base, LiteralKind};
-use memchr::memchr;
-use unicode_xid::UnicodeXID;
-
-/// Peekable iterator over a char sequence.
-///
-/// Next characters can be peeked via `first` method,
-/// and position can be shifted forward via `bump` method.
-#[derive(Debug)]
-pub(super) struct Cursor<'src> {
-    len_remaining: usize,
-    /// Iterator over chars. Slightly faster than a &str.
-    chars: Chars<'src>,
-}
 
 impl<'src> Cursor<'src> {
-    pub fn new(input: &'src str) -> Self {
-        Self {
-            chars: input.chars(),
-            len_remaining: input.len(),
-        }
+    /// Creates an iterator that produces tokens from the input string.
+    pub fn tokenize(input: &'src str) -> impl Iterator<Item = Token> {
+        let mut cursor = Self::new(input);
+        std::iter::from_fn(move || {
+            let token = cursor.advance_token();
+            if token.kind != TokenKind::EOF {
+                Some(token)
+            } else {
+                None
+            }
+        })
     }
 
+    /// Parses a token from the input string.
     pub fn advance_token(&mut self) -> Token {
         let Some(first_char) = self.bump() else {
-            return Token {
-                kind: EndOfInput,
-                len: 0,
-            };
+            return Token { kind: EOF, len: 0 };
         };
 
         let kind = match first_char {
@@ -40,37 +33,42 @@ impl<'src> Cursor<'src> {
                 _ => Slash,
             },
 
-            '\r' => match self.first() {
-                '\n' => {
+            '\u{000D}' => match self.first() {
+                '\u{000A}' => {
                     self.bump();
 
-                    NewLine
+                    NL
                 }
-                _ => self.whitespace(),
+                _ => self.ws(),
             },
-            '\n' => NewLine,
+            '\u{000A}' => NL,
 
-            c if is_whitespace(c) => self.whitespace(),
+            c if is_whitespace(c) => self.ws(),
 
             '0'..='9' => Literal {
                 kind: self.number(first_char),
             },
 
+            '`' => self.raw_ident(),
+
             c if is_ident_start(c) => self.ident(),
 
-            '=' => Eq,
-            '<' => Lt,
-            '>' => Gt,
-            '!' => Excl,
-            '+' => Plus,
-            '-' => Minus,
-            '*' => Star,
-            '.' => Dot,
+            '&' => And,
             ',' => Comma,
-            ';' => Semi,
             ':' => Colon,
+            '.' => Dot,
+            '=' => Eq,
+            '!' => Excl,
+            '>' => GT,
+            '<' => LT,
+            '-' => Minus,
+            '|' => Or,
+            '%' => Percent,
+            '+' => Plus,
             '?' => Quest,
-            '|' => Pipe,
+            ';' => Semi,
+            '*' => Star,
+            '~' => Tilde,
 
             '{' => LBrace,
             '}' => RBrace,
@@ -83,7 +81,7 @@ impl<'src> Cursor<'src> {
         let len = self.bumped_len();
         self.reset_len_remaining();
 
-        Token::new(kind, len)
+        Token { kind, len }
     }
 
     fn block_comment(&mut self) -> TokenKind {
@@ -121,10 +119,10 @@ impl<'src> Cursor<'src> {
         LineComment
     }
 
-    fn whitespace(&mut self) -> TokenKind {
+    fn ws(&mut self) -> TokenKind {
         self.eat_while(is_whitespace);
 
-        Whitespace
+        WS
     }
 
     fn number(&mut self, first_digit: char) -> LiteralKind {
@@ -252,70 +250,32 @@ impl<'src> Cursor<'src> {
         self.eat_dec_digits()
     }
 
+    fn raw_ident(&mut self) -> TokenKind {
+        self.bump();
+
+        let mut terminated = false;
+        while let Some(c) = self.bump() {
+            match c {
+                '`' => {
+                    terminated = true;
+                    break;
+                }
+                '\u{000A}' | '\u{000D}' => break,
+                _ => continue,
+            }
+        }
+
+        RawIdent { terminated }
+    }
+
     fn ident(&mut self) -> TokenKind {
         self.bump();
         self.eat_while(is_ident_continue);
 
         Ident
     }
-
-    pub fn as_str(&self) -> &'src str {
-        self.chars.as_str()
-    }
-
-    /// Peeks the next symbol from the input stream without consuming it.
-    /// If requested position doesn't exist, `EOF_CHAR` is returned.
-    /// However, getting `EOI_CHAR` doesn't always mean actual end of file,
-    /// it should be checked with `is_eoI` method.
-    pub fn first(&self) -> char {
-        // `.next()` optimizes better than `.nth(0)`
-        self.chars.clone().next().unwrap_or(EOI_CHAR)
-    }
-
-    /// Peeks the second symbol from the input stream without consuming it.
-    pub fn second(&self) -> char {
-        // `.next()` optimizes better than `.nth(1)`
-        let mut iter = self.chars.clone();
-        iter.next();
-        iter.next().unwrap_or(EOI_CHAR)
-    }
-
-    /// Moves to the next character.
-    pub fn bump(&mut self) -> Option<char> {
-        self.chars.next()
-    }
-
-    /// Eats symbols while predicate returns true or until the end of file is reached.
-    pub fn eat_while(&mut self, predicate: impl Fn(char) -> bool) {
-        while predicate(self.first()) && !self.is_at_eoi() {
-            self.bump();
-        }
-    }
-
-    pub fn eat_until(&mut self, byte: u8) {
-        self.chars = match memchr(byte, self.as_str().as_bytes()) {
-            Some(index) => self.as_str()[index..].chars(),
-            None => "".chars(),
-        }
-    }
-
-    /// Returns amount of already bumped symbols.
-    pub fn bumped_len(&self) -> usize {
-        self.len_remaining - self.chars.as_str().len()
-    }
-
-    /// Resets the number of bytes consumed to 0.
-    pub fn reset_len_remaining(&mut self) {
-        self.len_remaining = self.chars.as_str().len();
-    }
-
-    /// Checks if there is nothing more to consume.
-    pub fn is_at_eoi(&self) -> bool {
-        self.chars.as_str().is_empty()
-    }
 }
 
-const EOI_CHAR: char = '\0';
 fn is_whitespace(c: char) -> bool {
     matches!(
         c,
@@ -331,88 +291,4 @@ fn is_ident_start(c: char) -> bool {
 
 fn is_ident_continue(c: char) -> bool {
     c.is_xid_continue()
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub(super) struct Token {
-    pub kind: TokenKind,
-    pub len: usize,
-}
-
-impl Token {
-    pub const fn new(kind: TokenKind, len: usize) -> Self {
-        Self { kind, len }
-    }
-    pub const fn eoi() -> Self {
-        Self::new(EndOfInput, 0)
-    }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub(super) enum TokenKind {
-    /// A block comment, e.g. `/* block comment */`.
-    ///
-    /// Block comments can be recursive, so a sequence like `/* /* */`
-    /// will not be considered terminated and will result in a parsing error.
-    ///
-    /// `BlockComment = "/*" { BlockComment | <any character> } "*/" .`
-    BlockComment { terminated: bool },
-    /// A line comment, e.g. `// comment`.
-    ///
-    /// `LineComment = "//" { <any character except CarriageReturn and LineFeed> } .`
-    LineComment,
-    /// `NewLine = LineFeed | ( CarriageReturn [ LineFeed ] )`
-    NewLine,
-    /// `Whitespace = ( " " | "\t" | "\f" ) { ( " " | "\t" | "\f" ) } .`
-    Whitespace,
-
-    /// `=`
-    Eq,
-    /// `<`
-    Lt,
-    /// `>`
-    Gt,
-    /// `!`
-    Excl,
-    /// `+`
-    Plus,
-    /// `-`
-    Minus,
-    /// `*`
-    Star,
-    /// `/`
-    Slash,
-    /// `.`
-    Dot,
-    /// `,`
-    Comma,
-    /// `;`
-    Semi,
-    /// `:`
-    Colon,
-    /// `?`
-    Quest,
-    /// `|`
-    Pipe,
-
-    /// `{`
-    LBrace,
-    /// `}`
-    RBrace,
-    /// `(`
-    LParen,
-    /// `)`
-    RParen,
-
-    /// A literal constant value, e.g. `123` or `"hello"`.
-    Literal { kind: LiteralKind },
-
-    /// An identifier or keyword, e.g. `ident` or `prop`.
-    Ident,
-
-    /// Unknown token, not expected by the lexer, e.g. "№".
-    Unknown,
-
-    /// End of input.
-    EndOfInput,
 }

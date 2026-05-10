@@ -1,12 +1,13 @@
 use TokenKind::*;
 use ac_db::db::AliceDatabaseTrait;
+use ac_diag::Diagnostic;
 use ac_ir::{
     source::{SourceFile, Span},
     syntax::{Base, LiteralKind, Symbol, Token, TokenKind},
 };
 
 use crate::{
-    lexer::{self, Cursor},
+    lexer::cursor::{Cursor, TokenKind as CursorTokenKind},
     util::dummy_token,
 };
 
@@ -28,7 +29,8 @@ impl<'db> Lexer<'db> {
             pos: 0,
         };
 
-        let _ = lexer.bump();
+        lexer.bump();
+        lexer.pos = 0;
 
         lexer
     }
@@ -64,44 +66,52 @@ impl<'db> Lexer<'db> {
             self.pos += cursor_tok.len;
 
             let kind = match cursor_tok.kind {
-                lexer::TokenKind::BlockComment { terminated } => {
+                CursorTokenKind::BlockComment { terminated } => {
                     if !terminated {
                         todo!() // TODO: diag
                     }
                     preceded_by_ws = true;
                     continue;
                 }
-                lexer::TokenKind::LineComment => {
+                CursorTokenKind::LineComment => {
                     preceded_by_ws = true;
                     continue;
                 }
-                lexer::TokenKind::NewLine => todo!(),
-                lexer::TokenKind::Whitespace => {
+                CursorTokenKind::WS => {
                     preceded_by_ws = true;
                     continue;
                 }
-                lexer::TokenKind::Eq => Eq,
-                lexer::TokenKind::Lt => Lt,
-                lexer::TokenKind::Gt => Gt,
-                lexer::TokenKind::Excl => Excl,
-                lexer::TokenKind::Plus => Plus,
-                lexer::TokenKind::Minus => Minus,
-                lexer::TokenKind::Star => Star,
-                lexer::TokenKind::Slash => Slash,
-                lexer::TokenKind::Dot => Dot,
-                lexer::TokenKind::Comma => Comma,
-                lexer::TokenKind::Semi => Semi,
-                lexer::TokenKind::Colon => Colon,
-                lexer::TokenKind::Quest => Quest,
-                lexer::TokenKind::Pipe => Pipe,
-                lexer::TokenKind::LBrace => LBrace,
-                lexer::TokenKind::RBrace => RBrace,
-                lexer::TokenKind::LParen => LParen,
-                lexer::TokenKind::RParen => RParen,
-                lexer::TokenKind::Literal { kind } => todo!(),
-                lexer::TokenKind::Ident => todo!(),
-                lexer::TokenKind::Unknown => todo!(),
-                lexer::TokenKind::EndOfInput => EndOfInput,
+                CursorTokenKind::NL => todo!(),
+                CursorTokenKind::And => And,
+                CursorTokenKind::Comma => Comma,
+                CursorTokenKind::Colon => Colon,
+                CursorTokenKind::Dot => Dot,
+                CursorTokenKind::Eq => Eq,
+                CursorTokenKind::Excl => Excl,
+                CursorTokenKind::GT => GT,
+                CursorTokenKind::LT => LT,
+                CursorTokenKind::Minus => Minus,
+                CursorTokenKind::Or => Or,
+                CursorTokenKind::Percent => Percent,
+                CursorTokenKind::Plus => Plus,
+                CursorTokenKind::Quest => Quest,
+                CursorTokenKind::Semi => Semi,
+                CursorTokenKind::Slash => Slash,
+                CursorTokenKind::Star => Star,
+                CursorTokenKind::Tilde => Tilde,
+
+                CursorTokenKind::LBrace => LBrace,
+                CursorTokenKind::RBrace => RBrace,
+                CursorTokenKind::LParen => LParen,
+                CursorTokenKind::RParen => RParen,
+
+                CursorTokenKind::RawIdent { terminated } => todo!(),
+                CursorTokenKind::Ident => todo!(),
+
+                CursorTokenKind::Literal { kind } => todo!(),
+
+                CursorTokenKind::Unknown => todo!(),
+                CursorTokenKind::EOF => EOF,
             };
         }
         todo!()

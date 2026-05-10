@@ -122,16 +122,17 @@ A block comment containing no newlines acts like a space. Any other comment acts
 #### Keywords and operators
 
 ```ebnf
-Amp     = "&" .
+And     = "&" .
 Comma   = "," .
 Colon   = ":" .
 Dot     = "." .
 Eq      = "=" .
 Excl    = "!" .
+GT      = ">" .
 LT      = "<" .
 Minus   = "-" .
+Or      = "|" .
 Percent = "%" .
-Pipe    = "|" .
 Plus    = "+" .
 Quest   = "?" .
 Semi    = ";" .
@@ -139,10 +140,10 @@ Slash   = "/" .
 Star    = "*" .
 Tilde   = "~" .
 
-LParen = "(" .
-RParen = ")" .
 LBrace = "{" .
 RBrace = "}" .
+LParen = "(" .
+RParen = ")" .
 
 Conj       = "&&" .
 ColonColon = "::" .
@@ -152,9 +153,9 @@ EqEq       = "==" .
 GE         = ">=" .
 LE         = "<=" .
 MinusEq    = "-=" .
-NotEq      = "!=" .
+NE         = "!=" .
 PercentEq  = "%=" .
-PipeGt     = "|>" .
+Pipe       = "|>" .
 PlusEq     = "+=" .
 SlashEq    = "/=" .
 StarEq     = "*=" .
@@ -312,15 +313,16 @@ AliceToken = BlockComment
            | LineComment
            | WS
            | NL
-           | Amp
+           | And
            | Comma
            | Dot
            | Eq
            | Excl
+           | GT
            | LT
            | Minus
+           | Or
            | Percent
-           | Pipe
            | Plus
            | Quest
            | Semi
@@ -339,9 +341,9 @@ AliceToken = BlockComment
            | GE
            | LE
            | MinusEq
-           | NotEq
+           | NE
            | PercentEq
-           | PipeGt
+           | Pipe
            | PlusEq
            | StarEq
            | SlashEq

@@ -8,8 +8,8 @@ use ac_db::db::AliceDatabaseTrait;
 use ac_diag::{Diagnostic, DiagnosticKind};
 use ac_interface::{Config, run_alice};
 use ac_ir::source::SourceFile;
-use ac_query::parse_file_query;
-use ariadne::{FnCache, Label, Report, ReportKind};
+use ac_query::{eval_query, parse_file_query};
+use ariadne::{FnCache, Label, Report, ReportKind, Source};
 use clap::Parser;
 use thiserror::Error;
 
@@ -52,7 +52,6 @@ impl AliceDriver {
                 (fpath, span.start(db)..span.end(db)),
             )
             .with_message(diag.msg.clone())
-            .with_label(Label::new((fpath, span.start(db)..span.end(db))))
             .finish()
             .eprint(&mut report_cache)
             .expect("unable to report diag");
@@ -69,13 +68,12 @@ impl AliceDriver {
             write!(&mut output, "🦊 >>> ").expect("unable to write prompt invitation");
             output.flush().expect("unable to flush output writer");
 
-            line.clear();
-
             match reader.read_line(&mut line) {
-                Ok(0) => break,
+                Ok(0) | Err(_) => break,
                 Ok(_) => (), // TODO: impl
-                Err(_) => break,
             }
+
+            line.clear();
         }
     }
 }

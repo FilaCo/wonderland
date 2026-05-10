@@ -1,6 +1,6 @@
 mod lexer;
 mod parser;
-pub(crate) mod util;
+mod util;
 
 use lexer::*;
 pub use parser::*;

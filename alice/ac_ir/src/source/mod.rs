@@ -1,5 +1,5 @@
-mod source_file;
+mod source;
 mod span;
 
-pub use source_file::*;
+pub use source::*;
 pub use span::*;
