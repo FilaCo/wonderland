@@ -1,25 +1,53 @@
 use std::2d::*
 
+prop Collider(Rectangle)
+
+prop Velocity(Vec)
+
+prop Ball
+
+prop Paddle
+
+prop Gutter
+
+prop Collision = Left | Right | Top | Bottom
+use Collision::*
+
+prop Player = First | Second
+use Player::*
+
+prop Score {
+    first: int
+    second: int
+}
+
+prop Scored(id)
+
+prop FirstScore
+
+prop SecondScore
+
 in Startup
 spawn {
     Camera
     Transform::default!()
 }
 
-prop Velocity(Vec2)
-
-prop Ball
+const BALL_SIZE = 5.
+const BALL_SHAPE = Circle { radius: BALL_SIZE }
+const BALL_SPEED = 2.
+const BALL_COLOR = color_srgb!(1., 0., 0.)
 
 in Startup
 spawn {
     Ball
     Transform::default!()
+    Mesh(BALL_SHAPE)
+    Material(BALL_COLOR)
 }
 
-prop Player = First | Second
-prop Paddle
-
-use Player::*
+const PADDLE_SHAPE = Rectangle { width: 20., height: 50. }
+const PADDLE_COLOR = color_srgb!(0., 1., 0.)
 
 in Startup
 query w: Window
@@ -29,10 +57,44 @@ spawn {
     First,
     Paddle,
     Transform { x: -half_window_size.x + padding, y: 0., ..default!() }
+    Mesh(PADDLE_SHAPE)
+    Material(PADDLE_COLOR)
 }
 spawn {
     Second,
     Paddle,
     Transform { x: half_window_size.x - padding, y: 0., ..default!() }
+    Mesh(PADDLE_SHAPE)
+    Material(PADDLE_COLOR)
 }
 
+const GUTTER_COLOR = color_srgb!(0., 0., 1.)
+const GUTTER_HEIGHT = 20.
+
+in Startup
+query w: Window
+derive {
+    padding = 20.
+    gutter_shape = Rectangle { width: window.resolution.width, GUTTER_HEIGHT }
+    top_gutter_transform = Transform { x: 0., y: window.resolution.height / 2. - padding, ..default!() }
+}
+spawn {
+    Gutter
+    Mesh(gutter_shape)
+    Material(GUTTER_COLOR)
+    top_gutter_transform
+    Collider(gutter_shape)
+}
+derive bottom_gutter_transform = Transform { x: 0., y: -window.resolution.height / 2. + padding, ..default!() }
+spawn {
+    Gutter
+    Mesh(gutter_shape)
+    Material(GUTTER_COLOR)
+    bottom_gutter_transform
+    Collider(gutter_shape)
+}
+
+in FixedUpdate
+query (mut t: Transform, v: Velocity)
+with Ball
+derive t += v * BALL_SPEED
